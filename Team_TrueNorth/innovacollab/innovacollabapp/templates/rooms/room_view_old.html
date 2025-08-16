@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ room.title }} - Learning Room{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Room Header -->
+        <div class="row mb-5">
+            <div class="col-lg-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h1 class="h2 text-primary mb-2">{{ room.title }}</h1>
+                                <p class="text-muted mb-3">{{ room.description|truncatewords:20 }}</p>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2">{{ room.get_category_display }}</span>
+                                    <span class="badge bg-info me-2">{{ room.get_difficulty_level_display }}</span>
+                                    {% if is_premium %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-star-fill"></i> Premium Member
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-person"></i> Free Member
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                {% if room.room_image %}
+                                    <img src="{{ room.room_image.url }}" alt="{{ room.title }}" 
+                                         class="img-fluid rounded" style="max-height: 150px;">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-lg-8">
+                <!-- Navigation Tabs -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <ul class="nav nav-tabs card-header-tabs" id="roomTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="lessons-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#lessons" type="button" role="tab">
+                                    <i class="bi bi-play-circle me-2"></i>Lessons
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="materials-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#materials" type="button" role="tab">
+                                    <i class="bi bi-book me-2"></i>Materials
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="assignments-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#assignments" type="button" role="tab">
+                                    <i class="bi bi-pencil-square me-2"></i>Assignments
+                                </button>
+                            </li>
+                            {% if is_premium %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="live-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#live" type="button" role="tab">
+                                    <i class="bi bi-broadcast me-2"></i>Live Sessions
+                                </button>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="roomTabsContent">
+                            <!-- Lessons Tab -->
+                            <div class="tab-pane fade show active" id="lessons" role="tabpanel">
+                                <h5 class="mb-3">Video Lessons</h5>
+                                <div class="row">
+                                    {% if is_premium %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h6><i class="bi bi-camera-video text-primary me-2"></i>HD Video: Introduction</h6>
+                                                    <p class="text-muted small">High-quality video lesson with interactive features</p>
+                                                    <button class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-play-fill me-1"></i>Watch Now
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h6><i class="bi bi-camera-video text-primary me-2"></i>HD Video: Advanced Topics</h6>
+                                                    <p class="text-muted small">Deep dive into advanced concepts</p>
+                                                    <button class="btn btn-primary btn-sm">
+                                                        <i class="bi bi-play-fill me-1"></i>Watch Now
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h6><i class="bi bi-play-circle text-secondary me-2"></i>Basic Video: Introduction</h6>
+                                                    <p class="text-muted small">Standard quality video lesson</p>
+                                                    <button class="btn btn-secondary btn-sm">
+                                                        <i class="bi bi-play-fill me-1"></i>Watch Now
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 opacity-50">
+                                                <div class="card-body text-center">
+                                                    <h6><i class="bi bi-lock text-muted me-2"></i>HD Advanced Videos</h6>
+                                                    <p class="text-muted small">Premium content locked</p>
+                                                    <button class="btn btn-warning btn-sm">
+                                                        <i class="bi bi-star me-1"></i>Upgrade to Premium
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Materials Tab -->
+                            <div class="tab-pane fade" id="materials" role="tabpanel">
+                                <h5 class="mb-3">Course Materials</h5>
+                                <div class="list-group">
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-file-pdf text-danger me-2"></i>Course Handbook
+                                                </h6>
+                                                <p class="mb-1 text-muted">Essential reading material for the course</p>
+                                            </div>
+                                            <button class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye me-1"></i>View
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% if is_premium %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-download text-success me-2"></i>Downloadable Resources
+                                                </h6>
+                                                <p class="mb-1 text-muted">Premium materials for offline access</p>
+                                            </div>
+                                            <button class="btn btn-success btn-sm">
+                                                <i class="bi bi-download me-1"></i>Download
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="list-group-item opacity-50">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-lock text-muted me-2"></i>Premium Materials
+                                                </h6>
+                                                <p class="mb-1 text-muted">Upgrade to premium to access downloadable content</p>
+                                            </div>
+                                            <button class="btn btn-warning btn-sm">
+                                                <i class="bi bi-star me-1"></i>Upgrade to Premium
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Assignments Tab -->
+                            <div class="tab-pane fade" id="assignments" role="tabpanel">
+                                <h5 class="mb-3">Assignments</h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-pencil-square text-primary me-2"></i>Basic Assignment 1</h6>
+                                                <p class="text-muted small">Fundamental concepts practice</p>
+                                                <span class="badge bg-success">Available</span>
+                                                <button class="btn btn-primary btn-sm mt-2 d-block">
+                                                    Start Assignment
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if is_premium %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6><i class="bi bi-award text-warning me-2"></i>Premium Assignment</h6>
+                                                <p class="text-muted small">Advanced project with certification</p>
+                                                <span class="badge bg-warning">Premium</span>
+                                                <button class="btn btn-warning btn-sm mt-2 d-block">
+                                                    Start Assignment
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card opacity-50">
+                                            <div class="card-body text-center">
+                                                <h6><i class="bi bi-lock text-muted me-2"></i>Premium Assignments</h6>
+                                                <p class="text-muted small">Unlock with premium membership</p>
+                                                <button class="btn btn-warning btn-sm">
+                                                    <i class="bi bi-star me-1"></i>Upgrade to Premium
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if is_premium %}
+                            <!-- Live Sessions Tab (Premium Only) -->
+                            <div class="tab-pane fade" id="live" role="tabpanel">
+                                <h5 class="mb-3">Live Sessions</h5>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-broadcast me-2"></i>
+                                    <strong>Premium Feature:</strong> Join live interactive sessions with instructors
+                                </div>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6>Next Live Session: Advanced Topics Discussion</h6>
+                                        <p class="text-muted">Tomorrow at 3:00 PM</p>
+                                        <button class="btn btn-success">
+                                            <i class="bi bi-camera-video me-1"></i>Join Session
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- AI Chatbot Card -->
+                {% if is_premium %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);">
+                        <h6 class="mb-0">
+                            <i class="bi bi-robot me-2"></i>AI Voice Assistant
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Get instant help with voice-powered AI assistant</p>
+                        <button class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-mic me-2"></i>Start Voice Chat
+                        </button>
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="bi bi-chat-dots me-2"></i>Text Chat
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card border-0 shadow-sm mb-4 opacity-75">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-lock me-2"></i>AI Voice Assistant
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-muted small mb-3">Premium feature - Voice-powered AI assistance</p>
+                        <button class="btn btn-warning w-100">
+                            <i class="bi bi-star me-2"></i>Upgrade to Premium
+                        </button>
+                        <small class="text-muted d-block mt-2">Get instant help with AI</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Features Summary -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Your Access Level</h6>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-success mb-3">Free Features</h6>
+                        {% for feature in free_features %}
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="{{ feature.icon }} text-success me-2"></i>
+                            <span class="small">{{ feature.name }}</span>
+                            <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                        </div>
+                        {% endfor %}
+
+                        <hr>
+                        <h6 class="{% if is_premium %}text-warning{% else %}text-muted{% endif %} mb-3">
+                            Premium Features
+                            {% if is_premium %}
+                                <span class="badge bg-warning text-dark ms-2">Active</span>
+                            {% endif %}
+                        </h6>
+                        {% for feature in premium_features %}
+                        <div class="d-flex align-items-center mb-2 {% if not feature.available %}opacity-50{% endif %}">
+                            <i class="{{ feature.icon }} {% if feature.available %}text-warning{% else %}text-muted{% endif %} me-2"></i>
+                            <span class="small">{{ feature.name }}</span>
+                            {% if feature.available %}
+                                <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                            {% else %}
+                                <i class="bi bi-lock text-muted ms-auto"></i>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        {% if not is_premium %}
+                        <div class="text-center mt-3">
+                            <button class="btn btn-warning w-100">
+                                <i class="bi bi-star me-2"></i>Upgrade to Premium
+                            </button>
+                            <small class="text-muted d-block mt-2">Unlock all premium features</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Support Card -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">Need Help?</h6>
+                        {% if is_premium %}
+                        <button class="btn btn-success w-100 mb-2">
+                            <i class="bi bi-headset me-2"></i>Priority Support
+                        </button>
+                        <small class="text-success d-block text-center">Get instant premium support</small>
+                        {% else %}
+                        <button class="btn btn-outline-secondary w-100 mb-2">
+                            <i class="bi bi-chat-dots me-2"></i>Basic Support
+                        </button>
+                        <small class="text-muted d-block text-center">Response within 24 hours</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal (if any) -->
+{% if messages %}
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mb-0">{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Show message modal if there are messages
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+    var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    messageModal.show();
+    {% endif %}
+});
+
+// Upgrade to Premium buttons
+document.querySelectorAll('.btn-warning').forEach(button => {
+    if (button.textContent.includes('Upgrade to Premium')) {
+        button.addEventListener('click', function() {
+            alert('Premium upgrade feature coming soon!');
+        });
+    }
+});
+</script>
+{% endblock %}

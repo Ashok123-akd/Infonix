@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}{{ question.title }} - NoteBazar Forum{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="forum-container">
+    <!-- Question Header -->
+    <div class="question-header">
+        <h1 class="question-title">{{ question.title }}</h1>
+        <div class="question-meta">
+            <span><i class="fas fa-user"></i> {{ question.author }}</span>
+            <span><i class="fas fa-calendar-alt"></i> {{ question.created_at.strftime('%B %d, %Y') }}</span>
+            {% if question.tags %}
+                <span>
+                    <i class="fas fa-tags"></i>
+                    {% for tag in question.tags %}
+                        <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Question Body -->
+    <div class="question-body">
+        {{ question.content | safe }}
+    </div>
+
+    <hr class="divider">
+
+    <!-- Answers Section -->
+    <div class="answers-section">
+        <h2><i class="fas fa-reply"></i> {{ answers|length }} Answer{{ 's' if answers|length != 1 else '' }}</h2>
+        
+        {% if answers %}
+            {% for answer in answers %}
+                <div class="answer-card">
+                    <div class="answer-meta">
+                        <span><i class="fas fa-user"></i> {{ answer.author }}</span>
+                        <span><i class="fas fa-clock"></i> {{ answer.created_at.strftime('%B %d, %Y %H:%M') }}</span>
+                    </div>
+                    <div class="answer-content">
+                        {{ answer.content | safe }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-answers">No answers yet. Be the first to reply!</p>
+        {% endif %}
+    </div>
+
+    <hr class="divider">
+
+    <!-- Reply Form -->
+    {% if session.user_id %}
+    <div class="reply-form">
+        <h3><i class="fas fa-pen"></i> Your Answer</h3>
+        <form action="{{ url_for('post_answer', question_id=question.id) }}" method="POST">
+            <textarea name="content" rows="6" placeholder="Write your answer here..." required></textarea>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-paper-plane"></i> Post Answer
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <p class="login-prompt">
+        <a href="{{ url_for('login') }}" class="btn-outline">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </a> to post an answer.
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

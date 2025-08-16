@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}My Enrollments - InnovaCollab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fa fa-user-check text-primary"></i> My Enrollments</h2>
+                <a href="{% url 'room_list' %}" class="btn btn-primary">
+                    <i class="fa fa-plus"></i> Browse More Rooms
+                </a>
+            </div>
+
+            {% if enrollments %}
+            <div class="row">
+                {% for enrollment in enrollments %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        {% if enrollment.room.room_image %}
+                        <img src="{{ enrollment.room.room_image.url }}" class="card-img-top" 
+                             style="height: 200px; object-fit: cover;" alt="{{ enrollment.room.title }}">
+                        {% else %}
+                        <div class="bg-primary d-flex align-items-center justify-content-center" 
+                             style="height: 200px;">
+                            <i class="fa fa-book text-white" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ enrollment.room.title }}</h5>
+                            <p class="card-text text-muted flex-grow-1">
+                                {{ enrollment.room.description|truncatewords:15 }}
+                            </p>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-{{ enrollment.room.category|lower }} me-2">
+                                        {{ enrollment.room.get_category_display }}
+                                    </span>
+                                    {% if enrollment.enrollment_type == 'premium' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fa fa-star"></i> Premium
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fa fa-gift"></i> Free
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">Status: </small>
+                                    {% if enrollment.status == 'active' %}
+                                        <span class="badge bg-success">{{ enrollment.get_status_display }}</span>
+                                    {% elif enrollment.status == 'pending' %}
+                                        <span class="badge bg-warning">{{ enrollment.get_status_display }}</span>
+                                    {% elif enrollment.status == 'completed' %}
+                                        <span class="badge bg-info">{{ enrollment.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ enrollment.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <small class="text-muted">
+                                    Enrolled: {{ enrollment.enrolled_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                {% if enrollment.status == 'active' %}
+                                    <a href="{% url 'room_view' enrollment.room.id %}" class="btn btn-success">
+                                        <i class="fa fa-eye"></i> View Room
+                                    </a>
+                                    <a href="{% url 'room_detail' enrollment.room.pk %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-info-circle"></i> Room Details
+                                    </a>
+                                {% elif enrollment.status == 'pending' %}
+                                    <a href="{% url 'room_detail' enrollment.room.pk %}" class="btn btn-warning">
+                                        <i class="fa fa-clock"></i> Complete Enrollment
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'room_detail' enrollment.room.pk %}" class="btn btn-outline-secondary">
+                                        <i class="fa fa-info-circle"></i> View Details
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination if needed -->
+            {% if enrollments.has_other_pages %}
+            <nav aria-label="Enrollments pagination">
+                <ul class="pagination justify-content-center">
+                    {% if enrollments.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ enrollments.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in enrollments.paginator.page_range %}
+                    <li class="page-item {% if enrollments.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if enrollments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ enrollments.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <!-- No Enrollments -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fa fa-graduation-cap text-muted" style="font-size: 5rem;"></i>
+                </div>
+                <h4 class="text-muted mb-3">No Enrollments Yet</h4>
+                <p class="text-muted mb-4">You haven't enrolled in any rooms yet. Start learning today!</p>
+                <a href="{% url 'room_list' %}" class="btn btn-primary btn-lg">
+                    <i class="fa fa-search"></i> Browse Available Rooms
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

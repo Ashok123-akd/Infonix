@@ -1,0 +1,11 @@
+django
+django-allauth
+requests
+PyJWT
+cryptography
+requests
+python-dotenv
+google-generativeai
+PyPDF2
+python-docx
+Pillow

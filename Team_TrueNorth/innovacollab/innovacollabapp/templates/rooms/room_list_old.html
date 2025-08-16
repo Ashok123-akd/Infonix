@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Rooms - InnovaCollab{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">Browse Learning Rooms</h1>
+                <p class="lead text-muted">Discover and join learning communities that match your interests and goals</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'create_room' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Room
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filter Section -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <form method="GET" class="row g-3">
+                            <!-- Search Input -->
+                            <div class="col-lg-4 col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" 
+                                           id="search" name="search" value="{{ search_query }}" 
+                                           placeholder="Search rooms, topics, or instructors...">
+                                </div>
+                            </div>
+                            
+                            <!-- Category Filter -->
+                            <div class="col-lg-3 col-md-6">
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">All Categories</option>
+                                    {% for value, label in categories %}
+                                    <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Difficulty Filter -->
+                            <div class="col-lg-3 col-md-6">
+                                <select class="form-select" id="difficulty" name="difficulty">
+                                    <option value="">All Difficulty Levels</option>
+                                    {% for value, label in difficulties %}
+                                    <option value="{{ value }}" {% if selected_difficulty == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Search Button -->
+                            <div class="col-lg-2 col-md-6">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-filter me-1"></i>Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Results Section -->
+<section class="py-5">
+    <div class="container">
+        <!-- Results Count and Sorting -->
+        <div class="row align-items-center mb-4">
+            <div class="col-md-6">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if search_query or selected_category or selected_difficulty %}
+                        Found <strong>{{ rooms.paginator.count }}</strong> result{{ rooms.paginator.count|pluralize }} for your search
+                    {% else %}
+                        Showing all <strong>{{ rooms.paginator.count }}</strong> available room{{ rooms.paginator.count|pluralize }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                {% if search_query or selected_category or selected_difficulty %}
+                    <a href="{% url 'room_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+    <!-- Rooms Grid -->
+    {% if rooms %}
+    <div class="row">
+        {% for room in rooms %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                {% if room.room_image %}
+                <img src="{{ room.room_image.url }}" class="card-img-top" alt="{{ room.title }}" 
+                     style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-primary d-flex align-items-center justify-content-center" 
+                     style="height: 200px;">
+                    <i class="fa fa-book text-white fa-4x"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-primary">{{ room.get_category_display }}</span>
+                        <span class="badge bg-secondary">{{ room.get_difficulty_level_display }}</span>
+                    </div>
+                    
+                    <h5 class="card-title">{{ room.title }}</h5>
+                    <p class="card-text text-muted">{{ room.description|truncatewords:15 }}</p>
+                    
+                    <div class="mt-auto">
+                        <div class="row align-items-center mb-3">
+                            <div class="col">
+                                <small class="text-muted">
+                                    <i class="fa fa-user"></i> {{ room.instructor.username }}
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <small class="text-muted">
+                                    <i class="fa fa-users"></i> {{ room.get_total_enrollments }} enrolled
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="row align-items-center mb-2">
+                            <div class="col">
+                                <small class="text-muted">
+                                    <i class="fa fa-calendar"></i> {{ room.created_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            <div class="col-auto">
+                                <small class="text-muted">
+                                    <i class="fa fa-users-cog"></i> {{ room.capacity }} capacity
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if room.premium_price > 0 %}
+                                <span class="text-success fw-bold">Free + Premium</span>
+                                <br><small class="text-muted">Premium: ${{ room.premium_price }}</small>
+                                {% else %}
+                                <span class="text-success fw-bold">Free Only</span>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'room_detail' room.pk %}" class="btn btn-primary btn-sm">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if rooms.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Room pagination">
+                <ul class="pagination justify-content-center">
+                    {% if rooms.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}page={{ rooms.previous_page_number }}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in rooms.paginator.page_range %}
+                        {% if rooms.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > rooms.number|add:'-3' and num < rooms.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}page={{ num }}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if rooms.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}page={{ rooms.next_page_number }}">
+                                Next
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Rooms Found -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fa fa-search text-muted fa-4x mb-3"></i>
+                    <h4 class="text-muted">No rooms found</h4>
+                    {% if search_query or selected_category or selected_difficulty %}
+                    <p class="text-muted">Try adjusting your search criteria or browse all rooms.</p>
+                    <a href="{% url 'room_list' %}" class="btn btn-outline-primary">Clear Filters</a>
+                    {% else %}
+                    <p class="text-muted">Be the first to create a learning room!</p>
+                    <a href="{% url 'create_room' %}" class="btn btn-primary">Create First Room</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}

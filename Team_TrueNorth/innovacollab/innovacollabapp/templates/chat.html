@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Assistant - {{ room.title }} - InnovaCollab{% endblock %}
+{% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-robot text-primary me-3" style="font-size: 2rem;"></i>
+                                    <div>
+                                        <h1 class="h3 text-primary mb-1">AI Course Assistant</h1>
+                                        <p class="text-muted mb-0">{{ room.title }} - Premium Feature</p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning text-dark me-2">
+                                        <i class="bi bi-star-fill me-1"></i>Premium Feature
+                                    </span>
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-brain me-1"></i>AI Powered
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                <a href="{% url 'room_view' room.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-arrow-left me-2"></i>Back to Room
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Chat Area -->
+            <div class="col-lg-8">
+                <!-- Chat Container -->
+                <div class="card border-0 shadow-sm mb-4" style="height: 600px;">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-chat-dots me-2"></i>
+                                <h6 class="mb-0">Chat Session</h6>
+                            </div>
+                            <div>
+                                <button id="summary-btn" class="btn btn-outline-light btn-sm">
+                                    <i class="bi bi-file-text me-1"></i>Generate Summary
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 d-flex flex-column">
+                        <!-- Chat Messages -->
+                        <div class="chat-container flex-grow-1 p-4" id="chat-output" 
+                             style="overflow-y: auto; max-height: 480px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                            <!-- Welcome Message -->
+                            <div class="chat-message bot-message mb-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-robot text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="bg-white rounded-3 p-3 shadow-sm">
+                                            <p class="mb-0">
+                                                <strong>StudentHelper:</strong> Hello! I'm your AI course assistant for <strong>{{ room.title }}</strong>. 
+                                                I'm here to help you with questions, explanations, and guidance related to this course. 
+                                                Ask me anything to get started!
+                                            </p>
+                                        </div>
+                                        <small class="text-muted">Just now</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input Area -->
+                        <div class="border-top bg-white p-3">
+                            <div class="row align-items-end">
+                                <div class="col-12 mb-2">
+                                    <div class="input-group">
+                                        <input type="text" id="user-input" class="form-control" 
+                                               placeholder="Ask your question about the course..." 
+                                               style="border-right: none;">
+                                        <button id="mic-btn" class="btn btn-outline-secondary" type="button">
+                                            <i class="bi bi-mic-fill"></i>
+                                        </button>
+                                        <button id="send-btn" class="btn btn-primary" type="button">
+                                            <i class="bi bi-send-fill me-1"></i>Send
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Chat Settings -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-gear me-2"></i>Chat Settings
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="enable-speech">
+                                <label class="form-check-label" for="enable-speech">
+                                    <i class="bi bi-volume-up me-2"></i>Enable Text-to-Speech
+                                </label>
+                            </div>
+                            <small class="text-muted">Have responses read aloud</small>
+                        </div>
+                        
+                        <div id="voice-status" class="alert alert-info d-none">
+                            <small><i class="bi bi-mic me-1"></i>Listening...</small>
+                        </div>
+                        
+                        <div id="error-message" class="alert alert-danger d-none"></div>
+                        <div id="speech-support" class="alert alert-warning d-none"></div>
+                    </div>
+                </div>
+
+                <!-- File Upload for TTS -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-file-earmark-text me-2"></i>File Reader
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Upload text files to have them read aloud</p>
+                        
+                        <div class="mb-3">
+                            <input type="file" id="file-input" accept=".txt,.doc,.docx,.pdf" class="form-control form-control-sm">
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button id="upload-btn" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-upload me-1"></i>Upload & Read
+                            </button>
+                            <div id="reading-controls" class="btn-group d-none" role="group">
+                                <button id="pause-reading-btn" class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pause-fill"></i>
+                                </button>
+                                <button id="resume-reading-btn" class="btn btn-success btn-sm d-none">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                <button id="stop-reading-btn" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-stop-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="file-status" class="mt-2 d-none"></div>
+                        
+                        <div id="reading-progress" class="mt-3 d-none">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Progress</small>
+                                <span id="reading-status" class="badge bg-info">Ready</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Previous Summaries -->
+                {% if previous_summaries %}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-journal-text me-2"></i>Previous Summaries
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for summary in previous_summaries %}
+                        <div class="d-flex align-items-center justify-content-between py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 small">{{ summary.title|truncatechars:30 }}</h6>
+                                <small class="text-muted">{{ summary.created_date|date:"M d, Y" }}</small>
+                            </div>
+                            <a href="{{ summary.file_url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quick Actions -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="clearChat()">
+                                <i class="bi bi-trash me-2"></i>Clear Chat
+                            </button>
+                            <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-info-circle me-2"></i>Room Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-message {
+    margin-bottom: 1rem;
+}
+
+.user-message {
+    text-align: right;
+}
+
+.user-message .bg-white {
+    background-color: #007bff !important;
+    color: white;
+}
+
+.bot-message {
+    text-align: left;
+}
+
+.chat-container {
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f8f9fa;
+}
+
+.chat-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 3px;
+}
+
+#mic-btn.listening {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+</style>
+
+<script src="{% static 'chat.js' %}"></script>
+<script>
+// Initialize chat with room context
+window.onload = () => {
+    if (window.chatAPI) {
+        // Pass room ID to chat API
+        window.chatAPI.roomId = {{ room.id }};
+        window.chatAPI.init();
+    }
+};
+
+// Clear chat function
+function clearChat() {
+    if (confirm('Are you sure you want to clear the chat? This action cannot be undone.')) {
+        const chatOutput = document.getElementById('chat-output');
+        if (chatOutput) {
+            // Keep the welcome message
+            const welcomeMessage = chatOutput.querySelector('.chat-message:first-child');
+            chatOutput.innerHTML = '';
+            if (welcomeMessage) {
+                chatOutput.appendChild(welcomeMessage);
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

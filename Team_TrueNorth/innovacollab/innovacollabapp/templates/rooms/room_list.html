@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Rooms - InnovaCollab{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-3">Browse Learning Rooms</h1>
+                <p class="lead text-muted">Discover and join learning communities that match your interests and goals</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'create_room' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Room
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search and Filter Section -->
+<section class="py-4 bg-white border-bottom">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <form method="GET" class="row g-3">
+                            <!-- Search Input -->
+                            <div class="col-lg-4 col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-start-0" 
+                                           id="search" name="search" value="{{ search_query }}" 
+                                           placeholder="Search rooms, topics, or instructors...">
+                                </div>
+                            </div>
+                            
+                            <!-- Category Filter -->
+                            <div class="col-lg-3 col-md-6">
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">All Categories</option>
+                                    {% for value, label in categories %}
+                                    <option value="{{ value }}" {% if selected_category == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Difficulty Filter -->
+                            <div class="col-lg-3 col-md-6">
+                                <select class="form-select" id="difficulty" name="difficulty">
+                                    <option value="">All Difficulty Levels</option>
+                                    {% for value, label in difficulties %}
+                                    <option value="{{ value }}" {% if selected_difficulty == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Search Button -->
+                            <div class="col-lg-2 col-md-6">
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-filter me-1"></i>Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Results Section -->
+<section class="py-5">
+    <div class="container">
+        <!-- Results Count and Clear Filters -->
+        <div class="row align-items-center mb-4">
+            <div class="col-md-6">
+                <p class="text-muted mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if search_query or selected_category or selected_difficulty %}
+                        Found <strong>{{ rooms.paginator.count }}</strong> result{{ rooms.paginator.count|pluralize }} for your search
+                    {% else %}
+                        Showing all <strong>{{ rooms.paginator.count }}</strong> available room{{ rooms.paginator.count|pluralize }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                {% if search_query or selected_category or selected_difficulty %}
+                    <a href="{% url 'room_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Clear Filters
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Rooms Grid -->
+        {% if rooms %}
+        <div class="row g-4">
+            {% for room in rooms %}
+            <div class="col-lg-4 col-md-6">
+                <div class="room-card">
+                    <div class="room-card-image">
+                        {% if room.room_image %}
+                            <img src="{{ room.room_image.url }}" alt="{{ room.title }}">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <i class="fas fa-book text-white fa-4x"></i>
+                            </div>
+                        {% endif %}
+                        <div class="room-badge badge-custom">{{ room.get_category_display }}</div>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-dark">{{ room.get_difficulty_level_display }}</span>
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>{{ room.get_total_enrollments }}
+                            </small>
+                        </div>
+                        
+                        <h5 class="card-title fw-bold mb-3">{{ room.title }}</h5>
+                        <p class="card-text text-muted mb-3">{{ room.description|truncatewords:20 }}</p>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-auto">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-user-tie me-1"></i>{{ room.instructor.username }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>{{ room.created_date|date:"M d, Y" }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                {% if room.premium_price > 0 %}
+                                    <div class="text-success fw-semibold">Free</div>
+                                    <small class="text-muted">Premium: ${{ room.premium_price }}</small>
+                                {% else %}
+                                    <div class="text-success fw-semibold">Free</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <a href="{% url 'room_detail' room.pk %}" class="btn btn-primary">
+                                <i class="fas fa-arrow-right me-2"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if rooms.has_other_pages %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <nav aria-label="Room pagination">
+                    <ul class="pagination pagination-lg justify-content-center">
+                        {% if rooms.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}page={{ rooms.previous_page_number }}">
+                                    <i class="fas fa-chevron-left me-1"></i>Previous
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in rooms.paginator.page_range %}
+                            {% if rooms.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > rooms.number|add:'-3' and num < rooms.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}page={{ num }}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if rooms.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_difficulty %}difficulty={{ selected_difficulty }}&{% endif %}page={{ rooms.next_page_number }}">
+                                    Next<i class="fas fa-chevron-right ms-1"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- No Rooms Found -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+            </div>
+            <h4 class="text-muted mb-3">No rooms found</h4>
+            {% if search_query or selected_category or selected_difficulty %}
+                <p class="text-muted mb-4">Try adjusting your search criteria or browse all available rooms.</p>
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    <a href="{% url 'room_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-times me-2"></i>Clear Filters
+                    </a>
+                    <a href="{% url 'create_room' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Room
+                    </a>
+                </div>
+            {% else %}
+                <p class="text-muted mb-4">Be the first to create a learning room and start building your community!</p>
+                <a href="{% url 'create_room' %}" class="btn btn-primary btn-lg px-5">
+                    <i class="fas fa-plus me-2"></i>Create First Room
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

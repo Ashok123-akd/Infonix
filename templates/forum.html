@@ -1,0 +1,667 @@
+{% extends "base.html" %}
+
+{% block title %}Forum - NoteBazar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .forum-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .forum-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        color: white;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .forum-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="forum-pattern" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1" fill="white" opacity="0.1"/><circle cx="5" cy="25" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23forum-pattern)"/></svg>') repeat;
+        opacity: 0.3;
+    }
+
+    .forum-header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .forum-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .forum-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .ask-question-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .ask-question-btn:hover {
+        background: rgba(255,255,255,0.3);
+        border-color: rgba(255,255,255,0.5);
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .forum-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .category-filter {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .category-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #4a5568;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .category-btn:hover,
+    .category-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 300px;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        transition: border-color 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .questions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .question-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .question-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: #cbd5e0;
+    }
+
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        gap: 1rem;
+    }
+
+    .question-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .question-title a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .question-title a:hover {
+        color: #667eea;
+    }
+
+    .question-category {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+    }
+
+    .question-content {
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .question-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .question-author {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #718096;
+        font-size: 0.875rem;
+    }
+
+    .question-author i {
+        color: #9ca3af;
+    }
+
+    .question-stats {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #718096;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-item i {
+        color: #9ca3af;
+    }
+
+    .stat-item.answers i { color: #22c55e; }
+    .stat-item.time i { color: #f59e0b; }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 3rem;
+    }
+
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .pagination a:hover {
+        background: #f7fafc;
+        border-color: #cbd5e0;
+    }
+
+    .pagination .current {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #718096;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        margin-bottom: 2rem;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .trending-topics {
+        background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+        border: 1px solid rgba(67, 233, 123, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .trending-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .trending-list {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .trending-tag {
+        background: rgba(67, 233, 123, 0.2);
+        color: #065f46;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .trending-tag:hover {
+        background: rgba(67, 233, 123, 0.3);
+        color: #065f46;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+        .forum-container {
+            padding: 1rem;
+        }
+
+        .forum-header-content {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+
+        .forum-title {
+            font-size: 2rem;
+        }
+
+        .forum-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            min-width: auto;
+        }
+
+        .category-filter {
+            justify-content: center;
+        }
+
+        .question-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .question-meta {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+
+        .question-stats {
+            justify-content: space-between;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="forum-container">
+    <!-- Forum Header -->
+    <div class="forum-header">
+        <div class="forum-header-content">
+            <div>
+                <h1 class="forum-title">💬 Community Forum</h1>
+                <p class="forum-subtitle">Ask questions, share knowledge, and connect with fellow learners</p>
+            </div>
+            {% if session.user_id %}
+                <a href="{{ url_for('ask_question') }}" class="ask-question-btn">
+                    <i class="fas fa-plus"></i> Ask Question
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="ask-question-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login to Ask
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Trending Topics -->
+    <div class="trending-topics">
+        <div class="trending-title">
+            <i class="fas fa-fire"></i>
+            Trending Topics
+        </div>
+        <div class="trending-list">
+            <a href="?category=Programming" class="trending-tag"># Programming</a>
+            <a href="?category=Mathematics" class="trending-tag"># Mathematics</a>
+            <a href="?category=Science" class="trending-tag"># Science</a>
+            <a href="?category=Engineering" class="trending-tag"># Engineering</a>
+        </div>
+    </div>
+
+    <!-- Forum Controls -->
+    <div class="forum-controls">
+        <div class="category-filter">
+            <a href="{{ url_for('forum') }}" class="category-btn {% if not selected_category %}active{% endif %}">
+                All Categories
+            </a>
+            {% for category in categories %}
+                <a href="?category={{ category }}" 
+                   class="category-btn {% if selected_category == category %}active{% endif %}">
+                    {{ category }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search questions..." id="searchInput">
+        </div>
+    </div>
+
+    <!-- Questions List -->
+    <div class="questions-list">
+        {% if questions.items %}
+            {% for question in questions.items %}
+                <div class="question-card">
+                    <div class="question-header">
+                        <div style="flex: 1;">
+                            <h3 class="question-title">
+                                <a href="{{ url_for('view_question', question_id=question.id) }}">
+                                    {{ question.title }}
+                                </a>
+                            </h3>
+                            <div class="question-content">
+                                {{ question.content }}
+                            </div>
+                        </div>
+                        <div class="question-category">
+                            {{ question.category }}
+                        </div>
+                    </div>
+
+                    <div class="question-meta">
+                        <div class="question-author">
+                            <i class="fas fa-user"></i>
+                            <span>{{ question.user.username }}</span>
+                        </div>
+                        
+                        <div class="question-stats">
+                            <div class="stat-item answers">
+                                <i class="fas fa-comment"></i>
+                                <span>{{ question.answers|length }} answers</span>
+                            </div>
+                            <div class="stat-item time">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ question.created_at.strftime('%b %d') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>No questions found</h3>
+                <p>
+                    {% if selected_category %}
+                        No questions in the "{{ selected_category }}" category yet. 
+                        Be the first to ask!
+                    {% else %}
+                        No questions have been asked yet. Start the conversation!
+                    {% endif %}
+                </p>
+                {% if session.user_id %}
+                    <a href="{{ url_for('ask_question') }}" class="ask-question-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent;">
+                        <i class="fas fa-plus"></i> Ask First Question
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if questions.pages > 1 %}
+        <div class="pagination">
+            {% if questions.has_prev %}
+                <a href="?page={{ questions.prev_num }}{% if selected_category %}&category={{ selected_category }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            {% endif %}
+
+            {% for page_num in questions.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != questions.page %}
+                        <a href="?page={{ page_num }}{% if selected_category %}&category={{ selected_category }}{% endif %}">
+                            {{ page_num }}
+                        </a>
+                    {% else %}
+                        <span class="current">{{ page_num }}</span>
+                    {% endif %}
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if questions.has_next %}
+                <a href="?page={{ questions.next_num }}{% if selected_category %}&category={{ selected_category }}{% endif %}">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        let searchTimeout;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            searchTimeout = setTimeout(() => {
+                if (searchTerm.length > 2 || searchTerm.length === 0) {
+                    performSearch(searchTerm);
+                }
+            }, 500);
+        });
+
+        function performSearch(searchTerm) {
+            const questions = document.querySelectorAll('.question-card');
+            
+            questions.forEach(question => {
+                const title = question.querySelector('.question-title').textContent.toLowerCase();
+                const content = question.querySelector('.question-content').textContent.toLowerCase();
+                const category = question.querySelector('.question-category').textContent.toLowerCase();
+                
+                if (searchTerm === '' || 
+                    title.includes(searchTerm.toLowerCase()) || 
+                    content.includes(searchTerm.toLowerCase()) ||
+                    category.includes(searchTerm.toLowerCase())) {
+                    question.style.display = 'block';
+                    question.style.opacity = '1';
+                } else {
+                    question.style.display = 'none';
+                    question.style.opacity = '0';
+                }
+            });
+
+            // Show/hide empty state
+            const visibleQuestions = Array.from(questions).filter(q => q.style.display !== 'none');
+            const emptyState = document.querySelector('.empty-state');
+            
+            if (visibleQuestions.length === 0 && searchTerm !== '') {
+                if (!emptyState) {
+                    createSearchEmptyState(searchTerm);
+                }
+            }
+        }
+
+        function createSearchEmptyState(searchTerm) {
+            const questionsList = document.querySelector('.questions-list');
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state search-empty';
+            emptyDiv.innerHTML = `
+                <i class="fas fa-search"></i>
+                <h3>No results found</h3>
+                <p>No questions match your search for "<strong>${searchTerm}</strong>". Try different keywords or ask a new question!</p>
+                ${window.sessionUserId ? '<a href="/forum/ask" class="ask-question-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent;"><i class="fas fa-plus"></i> Ask New Question</a>' : ''}
+            `;
+            questionsList.appendChild(emptyDiv);
+        }
+
+        // Animate question cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        const questionCards = document.querySelectorAll('.question-card');
+        questionCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+            observer.observe(card);
+        });
+
+        // Enhanced hover effects
+        questionCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+        });
+
+        // Auto-focus search on '/' key press
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+        });
+
+        // Keyboard navigation for categories
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        categoryBtns.forEach((btn, index) => {
+            btn.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    const nextBtn = categoryBtns[index + 1] || categoryBtns[0];
+                    nextBtn.focus();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    const prevBtn = categoryBtns[index - 1] || categoryBtns[categoryBtns.length - 1];
+                    prevBtn.focus();
+                }
+            });
+        });
+    });
+
+    // Store session info for JS
+    window.sessionUserId = {{ session.user_id|tojson if session.user_id else 'null' }};
+</script>
+{% endblock %}

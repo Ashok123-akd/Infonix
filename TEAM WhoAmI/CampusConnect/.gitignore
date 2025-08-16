@@ -1,0 +1,164 @@
+# ----------------------
+# Ignore rules for ROOT, /frontend, and /backend
+# ----------------------
+
+# ===== Python compiled/optimized/DLL =====
+__pycache__/
+*.py[cod]
+*$py.class
+
+frontend/**/__pycache__/
+frontend/**/*.py[cod]
+frontend/**/*$py.class
+
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/**/*$py.class
+
+# ===== C extensions =====
+*.so
+frontend/**/*.so
+backend/**/*.so
+
+# ===== Distribution / packaging =====
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+frontend/**/build/
+frontend/**/dist/
+frontend/**/*.egg-info/
+frontend/**/*.egg
+
+backend/**/build/
+backend/**/dist/
+backend/**/*.egg-info/
+backend/**/*.egg
+
+# ===== PyInstaller =====
+*.manifest
+*.spec
+frontend/**/*.manifest
+frontend/**/*.spec
+backend/**/*.manifest
+backend/**/*.spec
+
+# ===== Installer logs =====
+pip-log.txt
+pip-delete-this-directory.txt
+frontend/**/pip-log.txt
+backend/**/pip-log.txt
+
+# ===== Unit test / coverage reports =====
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+frontend/**/htmlcov/
+frontend/**/.tox/
+frontend/**/.nox/
+frontend/**/*.coverage
+frontend/**/.cache
+frontend/**/.pytest_cache/
+
+backend/**/htmlcov/
+backend/**/.tox/
+backend/**/.nox/
+backend/**/*.coverage
+backend/**/.cache
+backend/**/.pytest_cache/
+
+# ===== Django =====
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+frontend/**/*.log
+backend/**/*.log
+backend/**/db.sqlite3
+backend/**/db.sqlite3-journal
+
+# ===== Flask stuff =====
+instance/
+.webassets-cache
+frontend/**/instance/
+frontend/**/.webassets-cache
+backend/**/instance/
+backend/**/.webassets-cache
+
+# ===== Environments =====
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+frontend/**/.env
+frontend/**/.venv
+frontend/**/env/
+frontend/**/venv/
+
+backend/**/.env
+backend/**/.venv
+backend/**/env/
+backend/**/venv/
+
+# ===== Node / JS related (for frontend) =====
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+frontend/node_modules/
+frontend/npm-debug.log
+frontend/yarn-debug.log
+frontend/yarn-error.log
+
+backend/node_modules/
+backend/npm-debug.log
+backend/yarn-debug.log
+backend/yarn-error.log
+
+# ===== IDE / Editor =====
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+frontend/.vscode/
+frontend/.idea/
+backend/.vscode/
+backend/.idea/
+
+# ===== Other =====
+.kiro
+.github

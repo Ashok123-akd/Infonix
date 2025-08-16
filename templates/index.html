@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-background">
+        <div class="hero-particles"></div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                Share Knowledge,
+                <span class="gradient-text">Earn Rewards</span>
+            </h1>
+            <p class="hero-subtitle">
+                Join the most vibrant community of learners and educators. Upload your notes, help others, and earn coins through our innovative reward system.
+            </p>
+            <div class="hero-actions">
+                {% if not session.user_id %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket"></i>
+                        Get Started Free
+                    </a>
+                    <a href="{{ url_for('notes') }}" class="btn btn-outline btn-lg">
+                        <i class="fas fa-book-open"></i>
+                        Browse Notes
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('upload_note') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-upload"></i>
+                        Upload Notes
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">
+                        <i class="fas fa-dashboard"></i>
+                        My Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-cards">
+                <div class="hero-card card-1">
+                    <i class="fas fa-book-open"></i>
+                    <span>10K+ Notes</span>
+                </div>
+                <div class="hero-card card-2">
+                    <i class="fas fa-users"></i>
+                    <span>5K+ Students</span>
+                </div>
+                <div class="hero-card card-3">
+                    <i class="fas fa-coins"></i>
+                    <span>Earn Rewards</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="section-container">
+        <div class="section-header">
+            <h2 class="section-title">Why Choose NoteBazar?</h2>
+            <p class="section-subtitle">Experience the future of educational content sharing</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <h3 class="feature-title">Easy Upload</h3>
+                <p class="feature-description">Upload your notes in seconds with our intuitive interface. Support for PDF, DOC, and more formats.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3 class="feature-title">Earn Coins</h3>
+                <p class="feature-description">Get rewarded for your contributions. Earn coins when others download your notes or rate your forum answers.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3 class="feature-title">Community Forum</h3>
+                <p class="feature-description">Ask questions, share knowledge, and help others. Build your reputation in our vibrant community.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">Secure & Safe</h3>
+                <p class="feature-description">Your content is protected with enterprise-grade security. Safe payment processing and data protection.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 class="feature-title">Mobile Friendly</h3>
+                <p class="feature-description">Access your notes anywhere, anytime. Fully responsive design for all your devices.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="feature-title">Analytics Dashboard</h3>
+                <p class="feature-description">Track your performance with detailed analytics. See downloads, earnings, and engagement metrics.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Notes Section -->
+<section class="recent-notes">
+    <div class="section-container">
+        <div class="section-header">
+            <h2 class="section-title">Latest Notes</h2>
+            <p class="section-subtitle">Discover fresh content from our community</p>
+            <a href="{{ url_for('notes') }}" class="btn btn-outline">View All Notes</a>
+        </div>
+        
+        <div class="notes-grid">
+            {% for note in recent_notes %}
+                <div class="note-card">
+                    <div class="note-header">
+                        <div class="note-meta">
+                            <span class="note-subject">{{ note.subject }}</span>
+                            {% if note.price == 0 %}
+                                <span class="note-price free">Free</span>
+                            {% else %}
+                                <span class="note-price paid">{{ note.price }} coins</span>
+                            {% endif %}
+                        </div>
+                        <div class="note-stats">
+                            <span class="stat">
+                                <i class="fas fa-eye"></i>
+                                {{ note.views }}
+                            </span>
+                            <span class="stat">
+                                <i class="fas fa-download"></i>
+                                {{ note.downloads }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="note-content">
+                        <h3 class="note-title">{{ note.title }}</h3>
+                        <p class="note-description">{{ note.description[:150] }}{% if note.description|length > 150 %}...{% endif %}</p>
+                        
+                        <div class="note-footer">
+                            <div class="note-author">
+                                <i class="fas fa-user-circle"></i>
+                                <span>{{ note.uploader.username }}</span>
+                            </div>
+                            <div class="note-date">
+                                {{ note.created_at.strftime('%b %d, %Y') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="note-actions">
+                        <a href="{{ url_for('view_note', note_id=note.id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i>
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Recent Forum Questions Section -->
+<section class="recent-forum">
+    <div class="section-container">
+        <div class="section-header">
+            <h2 class="section-title">Recent Discussions</h2>
+            <p class="section-subtitle">Join the conversation and help others learn</p>
+            <a href="{{ url_for('forum') }}" class="btn btn-outline">Visit Forum</a>
+        </div>
+        
+        <div class="forum-grid">
+            {% if recent_questions %}
+                {% for question in recent_questions %}
+                    <div class="forum-card">
+                        <div class="forum-header">
+                            <span class="forum-category">{{ question.category }}</span>
+                            <span class="forum-date">{{ question.created_at.strftime('%b %d') }}</span>
+                        </div>
+                        
+                        <div class="forum-content">
+                            <h3 class="forum-title">
+                                <a href="{{ url_for('view_question', question_id=question.id) }}">
+                                    {{ question.title }}
+                                </a>
+                            </h3>
+                            <p class="forum-excerpt">{{ question.content[:200] }}{% if question.content|length > 200 %}...{% endif %}</p>
+                            
+                            <div class="forum-footer">
+                                <div class="forum-author">
+                                    <i class="fas fa-user"></i>
+                                    {{ question.user.username }}
+                                </div>
+                                <div class="forum-stats">
+                                    <span class="stat">
+                                        <i class="fas fa-comments"></i>
+                                        {{ question.answers|length }} answers
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- Placeholder forum cards -->
+                <div class="forum-card placeholder">
+                    <div class="forum-header">
+                        <span class="forum-category">Mathematics</span>
+                        <span class="forum-date">Jan 14</span>
+                    </div>
+                    
+                    <div class="forum-content">
+                        <h3 class="forum-title">
+                            <a href="#">How to solve complex integration problems?</a>
+                        </h3>
+                        <p class="forum-excerpt">I'm struggling with integration by parts and partial fractions. Can someone explain the step-by-step approach with examples?</p>
+                        
+                        <div class="forum-footer">
+                            <div class="forum-author">
+                                <i class="fas fa-user"></i>
+                                StudentHelper
+                            </div>
+                            <div class="forum-stats">
+                                <span class="stat">
+                                    <i class="fas fa-comments"></i>
+                                    8 answers
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="forum-card placeholder">
+                    <div class="forum-header">
+                        <span class="forum-category">Physics</span>
+                        <span class="forum-date">Jan 13</span>
+                    </div>
+                    
+                    <div class="forum-content">
+                        <h3 class="forum-title">
+                            <a href="#">Understanding wave-particle duality</a>
+                        </h3>
+                        <p class="forum-excerpt">Can someone help me understand the concept of wave-particle duality in quantum mechanics? What are some real-world applications?</p>
+                        
+                        <div class="forum-footer">
+                            <div class="forum-author">
+                                <i class="fas fa-user"></i>
+                                CuriousLearner
+                            </div>
+                            <div class="forum-stats">
+                                <span class="stat">
+                                    <i class="fas fa-comments"></i>
+                                    12 answers
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="forum-card placeholder">
+                    <div class="forum-header">
+                        <span class="forum-category">Computer Science</span>
+                        <span class="forum-date">Jan 12</span>
+                    </div>
+                    
+                    <div class="forum-content">
+                        <h3 class="forum-title">
+                            <a href="#">Best practices for algorithm optimization</a>
+                        </h3>
+                        <p class="forum-excerpt">What are some effective strategies for optimizing algorithms? Looking for tips on time and space complexity improvements.</p>
+                        
+                        <div class="forum-footer">
+                            <div class="forum-author">
+                                <i class="fas fa-user"></i>
+                                TechEnthusiast
+                            </div>
+                            <div class="forum-stats">
+                                <span class="stat">
+                                    <i class="fas fa-comments"></i>
+                                    6 answers
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta">
+    <div class="section-container">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Start Your Journey?</h2>
+            <p class="cta-subtitle">Join thousands of students and educators already using NoteBazar</p>
+            {% if not session.user_id %}
+                <div class="cta-actions">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </a>
+                    <a href="{{ url_for('notes') }}" class="btn btn-outline btn-lg">
+                        <i class="fas fa-search"></i>
+                        Explore Notes
+                    </a>
+                </div>
+            {% else %}
+                <div class="cta-actions">
+                    <a href="{{ url_for('upload_note') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus"></i>
+                        Upload Your First Note
+                    </a>
+                    <a href="{{ url_for('forum') }}" class="btn btn-outline btn-lg">
+                        <i class="fas fa-comments"></i>
+                        Join Discussions
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

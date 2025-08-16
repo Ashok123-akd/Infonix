@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Secure Payment - {{ room.title }}{% endblock %}
+
+{% block content %}
+<div class="payment-header text-center py-4 mb-4">
+    <h1 class="display-5 fw-bold mb-2">
+        <i class="bi bi-credit-card text-primary me-3"></i>Secure Payment
+    </h1>
+    <p class="lead text-muted">Complete your purchase securely with eSewa</p>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Room Information Card -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            {% if room.room_image %}
+                                <img src="{{ room.room_image.url }}" alt="{{ room.title }}" 
+                                     class="img-fluid rounded" style="max-height: 100px; width: 100%;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                                    <i class="bi bi-book fs-1 text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h5 class="card-title text-primary">{{ room.title }}</h5>
+                            <p class="text-muted mb-1">by {{ room.instructor.get_full_name|default:room.instructor.username }}</p>
+                            <p class="card-text">{{ room.description|truncatewords:15 }}</p>
+                            <span class="badge bg-success">Premium Access</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-card card border-0 shadow-lg">
+                <div class="card-header bg-gradient text-white text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h4 class="mb-0">
+                        <i class="bi bi-shield-check me-2"></i>eSewa Payment Gateway
+                    </h4>
+                    <small class="opacity-75">Secure • Fast • Reliable</small>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Payment Summary -->
+                    <div class="payment-summary bg-light rounded p-4 mb-4">
+                        <h5 class="fw-semibold mb-3">
+                            <i class="bi bi-receipt text-primary me-2"></i>Payment Summary
+                        </h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="summary-item mb-2">
+                                    <span class="text-muted">Amount:</span>
+                                    <span class="fw-semibold ms-2">Rs.{{ amount }}</span>
+                                </div>
+                                <div class="summary-item mb-2">
+                                    <span class="text-muted">Tax (13%):</span>
+                                    <span class="fw-semibold ms-2">Rs.{{ tax_amount }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="summary-item mb-2">
+                                    <span class="text-muted">Service Charge:</span>
+                                    <span class="fw-semibold ms-2">Rs.{{ product_service_charge }}</span>
+                                </div>
+                                <div class="summary-item mb-2">
+                                    <span class="text-muted">Delivery:</span>
+                                    <span class="fw-semibold ms-2">Rs.{{ product_delivery_charge }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="total-amount d-flex justify-content-between align-items-center">
+                            <span class="fw-bold fs-5">Total Amount:</span>
+                            <span class="fw-bold fs-4 text-primary">Rs.{{ total_amount }}</span>
+                        </div>
+                    </div>
+                    
+                    <form action="{{ test_url }}" method="POST" id="paymentForm">
+                        {% csrf_token %}
+                        <!-- Hidden fields for payment processing -->
+                        <input type="hidden" name="amount" value="{{ amount }}">
+                        <input type="hidden" name="tax_amount" value="{{ tax_amount }}">
+                        <input type="hidden" name="total_amount" value="{{ total_amount }}">
+                        <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
+                        <input type="hidden" name="product_code" value="{{ product_code }}">
+                        <input type="hidden" name="product_service_charge" value="{{ product_service_charge }}">
+                        <input type="hidden" name="product_delivery_charge" value="{{ product_delivery_charge }}">
+                        <input type="hidden" name="success_url" value="{{ success_url }}">
+                        <input type="hidden" name="failure_url" value="{{ failure_url }}">
+                        <input type="hidden" name="signed_field_names" value="{{ signed_field_names }}">
+                        <input type="hidden" name="signature" value="{{ signature }}">
+                        
+                        <!-- Store room and enrollment info for success callback -->
+                        <input type="hidden" name="room_id" value="{{ room.id }}">
+                        <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                        
+                        <!-- Payment Options -->
+                        <div class="payment-methods mb-4">
+                            <h5 class="fw-semibold mb-3">
+                                <i class="bi bi-wallet2 text-primary me-2"></i>Payment Method
+                            </h5>
+                            <div class="payment-option selected">
+                                <div class="d-flex align-items-center p-3 border rounded">
+                                    <div class="payment-icon me-3">
+                                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%2360a85f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-family='Arial' font-size='12' font-weight='bold'%3EeSewa%3C/text%3E%3C/svg%3E" alt="eSewa" class="rounded">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-semibold">eSewa Digital Wallet</h6>
+                                        <small class="text-muted">Pay securely with your eSewa account</small>
+                                    </div>
+                                    <div class="payment-check">
+                                        <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Security Info -->
+                        <div class="security-info bg-light rounded p-3 mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-shield-lock-fill text-success fs-4 me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">Your payment is secure</h6>
+                                    <small class="text-muted">All transactions are encrypted and protected by industry-standard security measures.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg pay-button" id="payButton">
+                                <i class="bi bi-credit-card me-2"></i>
+                                <span class="button-text">Pay Rs.{{ total_amount }} with eSewa</span>
+                                <div class="spinner-border spinner-border-sm ms-2 d-none" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                            
+                            <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Room
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Development Notice -->
+            {% if debug %}
+            <div class="alert alert-warning mt-3" role="alert">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Development Mode:</strong> Using eSewa test environment. In production, this will process real payments.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.payment-card {
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    padding: 12px 30px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #004085);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.payment-option {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+    background-color: #f8f9fa;
+}
+
+.payment-option.selected .border {
+    border-color: #007bff !important;
+    background-color: #f8f9fa;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+}
+</style>
+
+<script>
+    document.getElementById('paymentForm').addEventListener('submit', function() {
+        const button = document.getElementById('payButton');
+        const buttonText = button.querySelector('.button-text');
+        const spinner = button.querySelector('.spinner-border');
+        
+        button.disabled = true;
+        buttonText.textContent = 'Processing Payment...';
+        spinner.classList.remove('d-none');
+    });
+</script>
+{% endblock %}

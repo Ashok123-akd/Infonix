@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block title %}Ask a Question - NoteBazar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .ask-question {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: var(--space-xl) var(--space-lg);
+    }
+
+    .ask-header {
+        text-align: center;
+        margin-bottom: var(--space-xl);
+    }
+
+    .ask-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: var(--space-md);
+    }
+
+    .ask-header p {
+        font-size: var(--font-size-lg);
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .question-form {
+        background: var(--bg-secondary);
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-xl);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .form-group {
+        margin-bottom: var(--space-xl);
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-sm);
+        font-size: var(--font-size-md);
+    }
+
+    .form-label i {
+        margin-right: var(--space-xs);
+        color: var(--primary-color);
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        width: 100%;
+        padding: var(--space-md);
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        font-size: var(--font-size-md);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transition: all var(--transition-normal);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-color-light);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 150px;
+        font-family: inherit;
+        line-height: 1.6;
+    }
+
+    .form-help {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin-top: var(--space-xs);
+    }
+
+    .submit-section {
+        display: flex;
+        justify-content: center;
+        margin-top: var(--space-xl);
+        padding-top: var(--space-xl);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .submit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        background: var(--primary-color);
+        color: white;
+        padding: var(--space-md) var(--space-xl);
+        border-radius: var(--border-radius-lg);
+        border: none;
+        font-size: var(--font-size-lg);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        text-decoration: none;
+        min-width: 200px;
+        justify-content: center;
+    }
+
+    .submit-btn:hover {
+        background: var(--primary-color-dark);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--space-sm);
+        margin-top: var(--space-sm);
+    }
+
+    .category-option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-sm);
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        font-size: var(--font-size-sm);
+    }
+
+    .category-option:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-color-light);
+    }
+
+    .category-option.selected {
+        border-color: var(--primary-color);
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .tips-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-xl);
+    }
+
+    .tips-card h3 {
+        color: var(--primary-color);
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .tips-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .tips-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+    }
+
+    .tips-list li i {
+        color: var(--success-color);
+        margin-top: 2px;
+    }
+
+    .response-message {
+        margin-top: var(--space-lg);
+        padding: var(--space-md);
+        border-radius: var(--border-radius-md);
+        display: none;
+    }
+
+    .response-message.success {
+        background: var(--success-light);
+        color: var(--success-dark);
+        border: 1px solid var(--success-color);
+        display: block;
+    }
+
+    .response-message.error {
+        background: var(--error-light);
+        color: var(--error-dark);
+        border: 1px solid var(--error-color);
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .ask-question {
+            padding: var(--space-lg);
+        }
+
+        .ask-header h1 {
+            font-size: 2rem;
+        }
+
+        .question-form {
+            padding: var(--space-lg);
+        }
+
+        .category-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ask-question">
+    <div class="ask-header">
+        <h1>
+            <i class="fas fa-question-circle"></i>
+            Ask a Question
+        </h1>
+        <p>Get help from our community of students and educators. Share your knowledge and help others learn!</p>
+    </div>
+
+    <div class="tips-card">
+        <h3>
+            <i class="fas fa-lightbulb"></i>
+            Tips for Great Questions
+        </h3>
+        <ul class="tips-list">
+            <li>
+                <i class="fas fa-check"></i>
+                Be specific and clear in your question title
+            </li>
+            <li>
+                <i class="fas fa-check"></i>
+                Provide context and details in the description
+            </li>
+            <li>
+                <i class="fas fa-check"></i>
+                Choose the most appropriate category
+            </li>
+            <li>
+                <i class="fas fa-check"></i>
+                Search existing questions before posting
+            </li>
+            <li>
+                <i class="fas fa-check"></i>
+                Be respectful and follow community guidelines
+            </li>
+        </ul>
+    </div>
+
+    <form class="question-form" id="askQuestionForm">
+        <div class="form-group">
+            <label class="form-label" for="title">
+                <i class="fas fa-heading"></i>
+                Question Title
+            </label>
+            <input type="text" class="form-input" id="title" name="title" 
+                   placeholder="What's your question? Be specific..." required>
+            <div class="form-help">Write a clear, concise title that summarizes your question</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="content">
+                <i class="fas fa-align-left"></i>
+                Question Details
+            </label>
+            <textarea class="form-textarea" id="content" name="content" 
+                      placeholder="Provide more details about your question. Include any relevant context, what you've tried, and what specific help you need..." required></textarea>
+            <div class="form-help">Provide as much relevant detail as possible to help others understand and answer your question</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="category">
+                <i class="fas fa-tags"></i>
+                Category
+            </label>
+            <select class="form-select" id="category" name="category" required>
+                <option value="">Select a category</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-help">Choose the category that best fits your question</div>
+        </div>
+
+        <div class="submit-section">
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <i class="fas fa-paper-plane"></i>
+                Post Question
+            </button>
+        </div>
+
+        <div class="response-message" id="responseMessage"></div>
+    </form>
+</div>
+
+<script>
+document.getElementById('askQuestionForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const responseMessage = document.getElementById('responseMessage');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+    submitBtn.disabled = true;
+    responseMessage.style.display = 'none';
+    responseMessage.className = 'response-message';
+    
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+    const category = document.getElementById('category').value;
+
+    try {
+        const response = await fetch('/forum/ask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title, content, category }),
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            responseMessage.className = 'response-message success';
+            responseMessage.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+            responseMessage.style.display = 'block';
+            
+            // Show success toast
+            showToast('success', 'Question posted successfully!');
+            
+            // Reset form after short delay
+            setTimeout(() => {
+                document.getElementById('askQuestionForm').reset();
+                responseMessage.style.display = 'none';
+            }, 2000);
+            
+            // Redirect to forum after longer delay
+            setTimeout(() => {
+                window.location.href = '/forum';
+            }, 3000);
+        } else {
+            responseMessage.className = 'response-message error';
+            responseMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + data.message;
+            responseMessage.style.display = 'block';
+            showToast('error', data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        responseMessage.className = 'response-message error';
+        responseMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> An error occurred. Please try again.';
+        responseMessage.style.display = 'block';
+        showToast('error', 'An error occurred. Please try again.');
+    } finally {
+        // Restore button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// Auto-resize textarea
+document.getElementById('content').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+</script>
+{% endblock %}

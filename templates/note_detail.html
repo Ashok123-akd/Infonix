@@ -1,0 +1,430 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ note.title }} - NoteBazar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .note-detail {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--space-xl) var(--space-lg);
+    }
+
+    .note-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-xl);
+        color: white;
+        margin-bottom: var(--space-xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .note-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        pointer-events: none;
+    }
+
+    .note-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: var(--space-md);
+        position: relative;
+    }
+
+    .note-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-lg);
+        align-items: center;
+        position: relative;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        background: rgba(255, 255, 255, 0.1);
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--border-radius-md);
+        backdrop-filter: blur(10px);
+    }
+
+    .note-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: var(--space-xl);
+        margin-bottom: var(--space-xl);
+    }
+
+    .main-content {
+        background: var(--bg-secondary);
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-xl);
+        border: 1px solid var(--border-color);
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-lg);
+    }
+
+    .info-card {
+        background: var(--bg-secondary);
+        border-radius: var(--border-radius-lg);
+        padding: var(--space-lg);
+        border: 1px solid var(--border-color);
+    }
+
+    .info-card h3 {
+        margin-bottom: var(--space-md);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .price-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        background: var(--success-color);
+        color: white;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--border-radius-full);
+        font-weight: 600;
+        font-size: var(--font-size-lg);
+    }
+
+    .price-tag.paid {
+        background: var(--warning-color);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-md);
+        margin-top: var(--space-md);
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: var(--space-md);
+        background: var(--bg-primary);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-color);
+    }
+
+    .stat-number {
+        display: block;
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .stat-label {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin-top: var(--space-xs);
+    }
+
+    .download-section {
+        text-align: center;
+        padding: var(--space-lg);
+        background: linear-gradient(135deg, var(--primary-color-light), var(--accent-color-light));
+        border-radius: var(--border-radius-lg);
+        border: 2px solid var(--primary-color);
+    }
+
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-sm);
+        background: var(--primary-color);
+        color: white;
+        padding: var(--space-md) var(--space-xl);
+        border-radius: var(--border-radius-lg);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all var(--transition-normal);
+        border: none;
+        cursor: pointer;
+        font-size: var(--font-size-lg);
+    }
+
+    .download-btn:hover {
+        background: var(--primary-color-dark);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .purchase-btn {
+        background: var(--warning-color);
+    }
+
+    .purchase-btn:hover {
+        background: #e09900;
+    }
+
+    .uploader-card {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-lg);
+        background: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        border: 1px solid var(--border-color);
+    }
+
+    .uploader-avatar {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-color);
+        border-radius: var(--border-radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: var(--font-size-xl);
+        font-weight: 700;
+    }
+
+    .uploader-info h4 {
+        margin-bottom: var(--space-xs);
+        color: var(--text-primary);
+    }
+
+    .uploader-date {
+        color: var(--text-secondary);
+        font-size: var(--font-size-sm);
+    }
+
+    .description {
+        line-height: 1.7;
+        color: var(--text-secondary);
+        margin-bottom: var(--space-lg);
+    }
+
+    .subject-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-xs);
+        background: var(--accent-color);
+        color: white;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--border-radius-full);
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+    }
+
+    .alert {
+        padding: var(--space-md);
+        border-radius: var(--border-radius-md);
+        margin-bottom: var(--space-lg);
+        border: 1px solid;
+    }
+
+    .alert-warning {
+        background: #fef3cd;
+        border-color: #facea8;
+        color: #997404;
+    }
+
+    .alert-info {
+        background: #cff4fc;
+        border-color: #b8daff;
+        color: #055160;
+    }
+
+    @media (max-width: 768px) {
+        .note-content {
+            grid-template-columns: 1fr;
+        }
+
+        .note-title {
+            font-size: 2rem;
+        }
+
+        .note-meta {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .note-detail {
+            padding: var(--space-lg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="note-detail">
+    <div class="note-header">
+        <h1 class="note-title">{{ note.title }}</h1>
+        <div class="note-meta">
+            <div class="meta-item subject-tag">
+                <i class="fas fa-tag"></i>
+                {{ note.subject }}
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-eye"></i>
+                {{ note.views }} views
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-download"></i>
+                {{ note.downloads }} downloads
+            </div>
+            <div class="meta-item">
+                {% if note.price == 0 %}
+                    <span class="price-tag">
+                        <i class="fas fa-gift"></i>
+                        Free
+                    </span>
+                {% else %}
+                    <span class="price-tag paid">
+                        <i class="fas fa-coins"></i>
+                        {{ note.price }} coins
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="note-content">
+        <div class="main-content">
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                Description
+            </h3>
+            <div class="description">
+                {{ note.description|safe }}
+            </div>
+
+            {% if not session.user_id and note.price > 0 %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Please <a href="{{ url_for('login') }}">login</a> to purchase and download this note.
+                </div>
+            {% endif %}
+
+            {% if session.user_id and not can_download and note.price > 0 %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-lock"></i>
+                    This is a premium note. Purchase it with coins to download.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="sidebar">
+            <div class="info-card">
+                <h3>
+                    <i class="fas fa-chart-bar"></i>
+                    Statistics
+                </h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number">{{ note.views }}</span>
+                        <div class="stat-label">Views</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">{{ note.downloads }}</span>
+                        <div class="stat-label">Downloads</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>
+                    <i class="fas fa-user"></i>
+                    Uploader
+                </h3>
+                <div class="uploader-card">
+                    <div class="uploader-avatar">
+                        {{ note.uploader.username[0].upper() }}
+                    </div>
+                    <div class="uploader-info">
+                        <h4>{{ note.uploader.username }}</h4>
+                        <div class="uploader-date">
+                            <i class="fas fa-calendar"></i>
+                            {{ note.created_at.strftime('%B %d, %Y') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card download-section">
+                {% if can_download %}
+                    <a href="{{ url_for('download_note', note_id=note.id) }}" class="download-btn">
+                        <i class="fas fa-download"></i>
+                        Download Note
+                    </a>
+                {% elif note.price == 0 %}
+                    <a href="{{ url_for('download_note', note_id=note.id) }}" class="download-btn">
+                        <i class="fas fa-download"></i>
+                        Download Free
+                    </a>
+                {% elif session.user_id %}
+                    <button onclick="purchaseNote('{{ note.id }}')" class="download-btn purchase-btn" id="purchaseBtn">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase ({{ note.price }} coins)
+                    </button>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="download-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login to Download
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function purchaseNote(noteId) {
+    const btn = document.getElementById('purchaseBtn');
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`/purchase/${noteId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('success', data.message);
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast('error', data.message);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'An error occurred. Please try again.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ room.title }} - InnovaCollab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Room Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            {% if room.room_image %}
+            <img src="{{ room.room_image.url }}" class="img-fluid rounded shadow" alt="{{ room.title }}" 
+                 style="width: 100%; height: 400px; object-fit: cover;">
+            {% else %}
+            <div class="bg-primary rounded shadow d-flex align-items-center justify-content-center" 
+                 style="width: 100%; height: 400px;">
+                <i class="fa fa-book text-white" style="font-size: 6rem;"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Room Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">{{ room.get_category_display }}</span>
+                        <span class="badge bg-secondary">{{ room.get_difficulty_level_display }}</span>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <small class="text-muted">Admin</small>
+                            <p class="mb-0"><i class="fa fa-user text-primary"></i> {{ room.instructor.username }}</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Capacity</small>
+                            <p class="mb-0"><i class="fa fa-users text-primary"></i> {{ room.capacity }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <small class="text-muted">Enrolled</small>
+                            <p class="mb-0"><i class="fa fa-user-check text-success"></i> {{ room.get_total_enrollments }}</p>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Created</small>
+                            <p class="mb-0"><i class="fa fa-calendar text-primary"></i> {{ room.created_date|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Enrollment Status -->
+                    {% if is_enrolled %}
+                    <div class="alert alert-success">
+                        <i class="fa fa-check-circle"></i> You are enrolled in this room
+                        <br><small>Type: {{ user_enrollment.get_enrollment_type_display }}</small>
+                    </div>
+                    
+                    <!-- View Room Button for Enrolled Users -->
+                    <div class="d-grid gap-2 mb-3">
+                        <a href="{% url 'room_view' room.id %}" class="btn btn-success btn-lg">
+                            <i class="fa fa-eye"></i> View Room Content
+                        </a>
+                    </div>
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            {% if user_enrollment.enrollment_type == 'premium' %}
+                                🌟 Premium features unlocked!
+                            {% else %}
+                                Free access with limited features
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#enrollmentModal">
+                            <i class="fa fa-sign-in-alt"></i> Enroll Now
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Details -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">{{ room.title }}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">{{ room.description }}</p>
+                </div>
+            </div>
+
+            <!-- Free vs Premium Content -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fa fa-gift"></i> Free Access</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if room.free_content_description %}
+                            <p>{{ room.free_content_description }}</p>
+                            {% else %}
+                            <ul class="list-unstyled">
+                                <li><i class="fa fa-check text-success"></i> Basic course materials</li>
+                                <li><i class="fa fa-check text-success"></i> View and Post Content </li>
+                                <li><i class="fa fa-check text-success"></i> Limited support</li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if room.premium_price > 0 %}
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fa fa-crown"></i> Premium Access - Rs. {{ room.premium_price }}</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if room.premium_content_description %}
+                            <p>{{ room.premium_content_description }}</p>
+                            {% else %}
+                            <ul class="list-unstyled">
+                                <li><i class="fa fa-check text-success"></i> All free features</li>
+                                <li><i class="fa fa-check text-success"></i> Voice Assistant Chatbot</li>
+                                <li><i class="fa fa-check text-success"></i> Priority support</li>
+                                <li><i class="fa fa-check text-success"></i> Downloadable resources</li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Instructor Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">About the Admin</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fa fa-user text-white fa-2x"></i>
+                        </div>
+                    </div>
+                    <h5>{{ room.instructor.username }}</h5>
+                    <p class="text-muted">{{ room.instructor.email }}</p>
+                    
+                    <hr>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h6 class="text-primary">{{ room.instructor.created_rooms.count }}</h6>
+                            <small class="text-muted">Rooms Created</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-primary">{{ room.get_total_enrollments }}</h6>
+                            <small class="text-muted">Members</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Room Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h4 class="text-success">{{ room.get_free_enrollments }}</h4>
+                            <small class="text-muted">Free Members</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-warning">{{ room.get_premium_enrollments }}</h4>
+                            <small class="text-muted">Premium Members</small>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-2">
+                        {% widthratio room.get_total_enrollments room.capacity 100 as enrollment_percentage %}
+                        <div class="progress-bar" style="width: {{ enrollment_percentage }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ enrollment_percentage }}% capacity filled</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enrollment Modal -->
+{% if not is_enrolled %}
+<div class="modal fade" id="enrollmentModal" tabindex="-1" aria-labelledby="enrollmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enrollmentModalLabel">Choose Your Enrollment Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Free Plan -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white text-center">
+                                <h4>Free Access</h4>
+                                <h2>Rs. 0</h2>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li><i class="fa fa-check text-success"></i> Basic course materials</li>
+                                    <li><i class="fa fa-check text-success"></i> Community discussions</li>
+                                    <li><i class="fa fa-times text-muted"></i> No voice chatbot</li>
+                                    <li><i class="fa fa-times text-muted"></i> Limited support</li>
+                                </ul>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{% url 'enroll_free' room.id %}" class="btn btn-success d-grid">
+                                    <i class="fa fa-gift"></i> Enroll for Free
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Premium Plan -->
+                    {% if room.premium_price > 0 %}
+                    <div class="col-md-6">
+                        <div class="card h-100 border-warning">
+                            <div class="card-header bg-warning text-dark text-center">
+                                <h4>Premium Access</h4>
+                                <h2>Rs. {{ room.premium_price }}</h2>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    <li><i class="fa fa-check text-success"></i> All free features</li>
+                                    <li><i class="fa fa-check text-success"></i> Voice chatbot assistance</li>
+                                    <li><i class="fa fa-check text-success"></i> Priority support</li>
+                                    <li><i class="fa fa-check text-success"></i> Advanced features</li>
+                                </ul>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{% url 'enroll_premium_form' room.id %}" class="btn btn-warning d-grid">
+                                    <i class="fa fa-crown"></i> Choose Premium
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+}
+
+.modal-dialog {
+    max-width: 800px;
+}
+</style>
+{% endblock %}

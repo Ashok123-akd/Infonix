@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ 'Login' if mode == 'login' else 'Register' }} - NoteBazar
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>NoteBazar</span>
+            </div>
+            <h2 class="auth-title">
+                {% if mode == 'login' %}
+                    Welcome Back!
+                {% else %}
+                    Join NoteBazar
+                {% endif %}
+            </h2>
+            <p class="auth-subtitle">
+                {% if mode == 'login' %}
+                    Sign in to your account to continue
+                {% else %}
+                    Create your account and start sharing knowledge
+                {% endif %}
+            </p>
+        </div>
+        
+        <form class="auth-form" id="{{ mode }}Form">
+            {% if mode == 'register' %}
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+            {% else %}
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            
+            {% if mode == 'register' %}
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" required>
+                        <span class="checkmark"></span>
+                        I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+                    </label>
+                </div>
+            {% endif %}
+            
+            <button type="submit" class="btn btn-primary btn-lg auth-submit">
+                <i class="fas fa-{% if mode == 'login' %}sign-in-alt{% else %}user-plus{% endif %}"></i>
+                {{ 'Sign In' if mode == 'login' else 'Create Account' }}
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>
+                {% if mode == 'login' %}
+                    Don't have an account?
+                    <a href="{{ url_for('register') }}" class="link">Sign up here</a>
+                {% else %}
+                    Already have an account?
+                    <a href="{{ url_for('login') }}" class="link">Sign in here</a>
+                {% endif %}
+            </p>
+        </div>
+        
+        {% if mode == 'register' %}
+            <div class="welcome-bonus">
+                <div class="bonus-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="bonus-text">
+                    <strong>Welcome Bonus!</strong>
+                    <span>Get 10 free coins when you create your account</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.auth-container {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl);
+    background: var(--bg-secondary);
+    position: relative;
+}
+
+.auth-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    pointer-events: none;
+}
+
+.auth-card {
+    position: relative;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-3xl);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: var(--shadow-xl);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--space-3xl);
+}
+
+.auth-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+}
+
+.auth-brand i {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    border-radius: var(--radius-md);
+    color: white;
+}
+
+.auth-title {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-md);
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.auth-form {
+    margin-bottom: var(--space-xl);
+}
+
+.auth-submit {
+    width: 100%;
+    margin-top: var(--space-lg);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background: var(--primary);
+    border-color: transparent;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: white;
+    font-size: 12px;
+}
+
+.link {
+    color: #667eea;
+    transition: var(--transition);
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.auth-footer {
+    text-align: center;
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border-light);
+    color: var(--text-secondary);
+}
+
+.welcome-bonus {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    margin-top: var(--space-xl);
+}
+
+.bonus-icon {
+    width: 48px;
+    height: 48px;
+    background: #d97706;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: var(--font-size-xl);
+    flex-shrink: 0;
+}
+
+.bonus-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.bonus-text strong {
+    color: #92400e;
+    font-weight: 600;
+}
+
+.bonus-text span {
+    color: #a16207;
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 640px) {
+    .auth-container {
+        padding: var(--space-lg);
+    }
+    
+    .auth-card {
+        padding: var(--space-2xl);
+    }
+    
+    .welcome-bonus {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

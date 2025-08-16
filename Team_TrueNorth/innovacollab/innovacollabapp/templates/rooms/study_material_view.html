@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ material.title }} - Study Material{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{% url 'room_detail' room.id %}">{{ room.title }}</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'room_view' room.id %}">Study Materials</a></li>
+                                <li class="breadcrumb-item active">{{ material.title }}</li>
+                            </ol>
+                        </nav>
+                        <div class="d-flex align-items-center">
+                            <i class="{{ material.get_icon_class }} text-primary me-2 fs-4"></i>
+                            <h1 class="h3 mb-0">{{ material.title }}</h1>
+                            {% if material.access_level == 'premium' %}
+                                <span class="badge bg-warning text-dark ms-3">Premium</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if can_edit %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots me-1"></i>Actions
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="loadMaterialForEdit({{ material.id }})">
+                                <i class="bi bi-pencil me-2"></i>Edit
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteMaterial({{ material.id }}, '{{ material.title }}')">
+                                <i class="bi bi-trash me-2"></i>Delete
+                            </a></li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Info -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="row text-muted small mb-3">
+                            <div class="col-md-3">
+                                <i class="bi bi-person-circle me-1"></i>
+                                <strong>Author:</strong> {{ material.author.username }}
+                            </div>
+                            <div class="col-md-3">
+                                <i class="bi bi-calendar me-1"></i>
+                                <strong>Created:</strong> {{ material.created_date|date:"M d, Y" }}
+                            </div>
+                            <div class="col-md-3">
+                                <i class="bi bi-tag me-1"></i>
+                                <strong>Type:</strong> {{ material.get_material_type_display }}
+                            </div>
+                            {% if material.file_size %}
+                            <div class="col-md-3">
+                                <i class="bi bi-file-earmark me-1"></i>
+                                <strong>Size:</strong> {{ material.file_size|filesizeformat }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if material.description %}
+                        <div class="mb-4">
+                            <h5>Description</h5>
+                            <p class="text-muted">{{ material.description|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Content Display based on Material Type -->
+                        {% if material.material_type == 'text' and material.content %}
+                            <div class="mb-4">
+                                <h5>Content</h5>
+                                <div class="bg-light p-4 rounded">
+                                    <div class="material-content">{{ material.content|linebreaks }}</div>
+                                </div>
+                            </div>
+                        {% elif material.external_link %}
+                            <div class="mb-4">
+                                <h5>External Resource</h5>
+                                <div class="d-flex align-items-center p-3 bg-light rounded">
+                                    <i class="bi bi-link-45deg text-primary me-3 fs-4"></i>
+                                    <div>
+                                        <p class="mb-1"><strong>External Link</strong></p>
+                                        <a href="{{ material.external_link }}" target="_blank" class="text-decoration-none">
+                                            {{ material.external_link }}
+                                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif material.file_upload %}
+                            <div class="mb-4">
+                                <h5>File Content</h5>
+                                <div class="border rounded p-3">
+                                    {% if material.material_type == 'pdf' %}
+                                        <div class="text-center mb-3">
+                                            <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
+                                            <h6 class="mt-2">PDF Document</h6>
+                                            <p class="text-muted">{{ material.file_upload.name|slice:":50" }}...</p>
+                                        </div>
+                                        <!-- PDF Viewer -->
+                                        <div class="pdf-viewer mb-3">
+                                            <iframe src="{% url 'serve_study_material' room.id material.id %}" 
+                                                    width="100%" 
+                                                    height="600px" 
+                                                    frameborder="0"
+                                                    class="border rounded">
+                                                <p>Your browser doesn't support PDF viewing. 
+                                                   <a href="{% url 'serve_study_material' room.id material.id %}" target="_blank">Click here to view the PDF</a>
+                                                </p>
+                                            </iframe>
+                                        </div>
+                                    {% elif material.material_type == 'image' %}
+                                        <div class="text-center">
+                                            <img src="{% url 'serve_study_material' room.id material.id %}" 
+                                                 alt="{{ material.title }}" 
+                                                 class="img-fluid rounded shadow-sm" 
+                                                 style="max-height: 600px;">
+                                        </div>
+                                    {% elif material.material_type == 'video' %}
+                                        <div class="text-center">
+                                            <video controls class="w-100" style="max-height: 500px;">
+                                                <source src="{% url 'serve_study_material' room.id material.id %}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center p-4">
+                                            <i class="{{ material.get_icon_class }} text-primary display-1 mb-3"></i>
+                                            <h6>{{ material.get_material_type_display }}</h6>
+                                            <p class="text-muted">{{ material.file_upload.name }}</p>
+                                            <a href="{% url 'serve_study_material' room.id material.id %}" target="_blank" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye me-1"></i>Open File
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            {% if material.file_upload %}
+                                {% if material.access_level == 'free' or is_premium %}
+                                    <a href="{% url 'download_study_material' room.id material.id %}" class="btn btn-success">
+                                        <i class="bi bi-download me-1"></i>Download
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="bi bi-lock me-1"></i>Premium Required
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if material.external_link %}
+                                <a href="{{ material.external_link }}" target="_blank" class="btn btn-primary">
+                                    <i class="bi bi-link-45deg me-1"></i>Open Link
+                                </a>
+                            {% endif %}
+                            
+                            <button class="btn btn-outline-secondary" onclick="window.history.back()">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Materials
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Related Materials -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Other Materials in this Room</h6>
+                    </div>
+                    <div class="card-body">
+                        {% comment %}
+                        <!-- You can add related materials here if needed -->
+                        {% endcomment %}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-collection me-1"></i>
+                            <a href="{% url 'room_view' room.id %}" class="text-decoration-none">
+                                View all materials
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material Stats -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">Material Information</h6>
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Type:</span>
+                                <span>{{ material.get_material_type_display }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Access:</span>
+                                <span class="{% if material.access_level == 'premium' %}text-warning{% endif %}">
+                                    {{ material.get_access_level_display }}
+                                </span>
+                            </div>
+                            {% if material.file_size %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">File Size:</span>
+                                <span>{{ material.file_size|filesizeformat }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Created:</span>
+                                <span>{{ material.created_date|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Updated:</span>
+                                <span>{{ material.updated_date|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include the modals from room_view_new.html if edit permissions exist -->
+{% if can_edit %}
+<!-- Edit Study Material Modal -->
+<div class="modal fade" id="editMaterialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Study Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editMaterialForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="edit_title" class="form-label">Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_title" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="edit_access_level" class="form-label">Access Level</label>
+                                <select class="form-select" id="edit_access_level" name="access_level">
+                                    <option value="free">Free Access</option>
+                                    <option value="premium">Premium Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_material_type" class="form-label">Material Type</label>
+                                <select class="form-select" id="edit_material_type" name="material_type" onchange="toggleEditMaterialInputs()">
+                                    <option value="other">Other</option>
+                                    <option value="pdf">PDF Document</option>
+                                    <option value="video">Video</option>
+                                    <option value="image">Image</option>
+                                    <option value="text">Text Document</option>
+                                    <option value="link">External Link</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3" id="edit-file-upload-group">
+                                <label for="edit_file_upload" class="form-label">Replace File (Optional)</label>
+                                <input type="file" class="form-control" id="edit_file_upload" name="file_upload">
+                                <div class="form-text">Leave empty to keep current file. Maximum: 50MB</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="edit-external-link-group" style="display: none;">
+                        <label for="edit_external_link" class="form-label">External Link</label>
+                        <input type="url" class="form-control" id="edit_external_link" name="external_link" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="mb-3" id="edit-content-group" style="display: none;">
+                        <label for="edit_content" class="form-label">Text Content</label>
+                        <textarea class="form-control" id="edit_content" name="content" rows="5" placeholder="Enter your text content here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteMaterialModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the study material "<span id="deleteMaterialTitle"></span>"?</p>
+                <p class="text-danger small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" id="deleteMaterialForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Material</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEditMaterialInputs() {
+    const materialType = document.getElementById('edit_material_type').value;
+    const fileGroup = document.getElementById('edit-file-upload-group');
+    const linkGroup = document.getElementById('edit-external-link-group');
+    const contentGroup = document.getElementById('edit-content-group');
+    
+    // Reset display
+    fileGroup.style.display = 'block';
+    linkGroup.style.display = 'none';
+    contentGroup.style.display = 'none';
+    
+    if (materialType === 'link') {
+        fileGroup.style.display = 'none';
+        linkGroup.style.display = 'block';
+    } else if (materialType === 'text') {
+        contentGroup.style.display = 'block';
+    }
+}
+
+function loadMaterialForEdit(materialId) {
+    // Fetch material data and populate the edit form
+    fetch(`/room/{{ room.id }}/material/${materialId}/data/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const material = data.material;
+                
+                // Populate form fields
+                document.getElementById('edit_title').value = material.title;
+                document.getElementById('edit_description').value = material.description;
+                document.getElementById('edit_material_type').value = material.material_type;
+                document.getElementById('edit_access_level').value = material.access_level;
+                document.getElementById('edit_external_link').value = material.external_link;
+                document.getElementById('edit_content').value = material.content;
+                
+                // Set form action
+                document.getElementById('editMaterialForm').action = `/room/{{ room.id }}/material/${materialId}/edit/`;
+                
+                // Toggle input fields based on material type
+                toggleEditMaterialInputs();
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editMaterialModal'));
+                modal.show();
+            } else {
+                alert('Error loading material data: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading material data');
+        });
+}
+
+function deleteMaterial(materialId, materialTitle) {
+    // Set the material title in the modal
+    document.getElementById('deleteMaterialTitle').textContent = materialTitle;
+    
+    // Set the form action
+    const form = document.getElementById('deleteMaterialForm');
+    form.action = `/room/{{ room.id }}/material/${materialId}/delete/`;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteMaterialModal'));
+    modal.show();
+}
+</script>
+{% endif %}
+
+{% endblock %}

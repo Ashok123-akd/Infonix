@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}Buy Coins - NoteBazar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .buy-coins-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 1rem;
+    }
+
+    .page-subtitle {
+        font-size: 1.1rem;
+        color: #718096;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .current-balance {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .current-balance::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="coin-pattern" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="2" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23coin-pattern)"/></svg>') repeat;
+    }
+
+    .balance-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .balance-amount {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .balance-label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .coin-packages {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .package-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .package-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+        border-color: #667eea;
+    }
+
+    .package-card.popular {
+        border-color: #f093fb;
+        background: linear-gradient(135deg, rgba(240, 147, 251, 0.05) 0%, rgba(245, 87, 108, 0.05) 100%);
+    }
+
+    .package-badge {
+        position: absolute;
+        top: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0 0 8px 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .package-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        box-shadow: 0 8px 30px rgba(67, 233, 123, 0.3);
+    }
+
+    .package-card.popular .package-icon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        box-shadow: 0 8px 30px rgba(240, 147, 251, 0.3);
+    }
+
+    .package-coins {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .package-price {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 1rem;
+    }
+
+    .package-value {
+        background: #f0fff4;
+        color: #22c55e;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        display: inline-block;
+    }
+
+    .package-features {
+        list-style: none;
+        padding: 0;
+        margin: 1.5rem 0;
+    }
+
+    .package-features li {
+        padding: 0.5rem 0;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .package-features i {
+        color: #22c55e;
+    }
+
+    .buy-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .buy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .package-card.popular .buy-btn {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .package-card.popular .buy-btn:hover {
+        box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+    }
+
+    .payment-info {
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 3rem;
+    }
+
+    .payment-info h3 {
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .payment-method {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .payment-method i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #4a5568;
+    }
+
+    .payment-method.esewa i { color: #60d937; }
+    .payment-method.khalti i { color: #5c2d91; }
+    .payment-method.imepay i { color: #e74c3c; }
+
+    .usage-tips {
+        background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+        border: 1px solid rgba(67, 233, 123, 0.2);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .usage-tips h3 {
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tips-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .tips-list li {
+        padding: 0.5rem 0;
+        color: #4a5568;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .tips-list i {
+        color: #22c55e;
+        margin-top: 0.25rem;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .buy-coins-container {
+            padding: 1rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .balance-amount {
+            font-size: 2.5rem;
+        }
+
+        .coin-packages {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .payment-methods {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="buy-coins-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">💰 Buy Coins</h1>
+        <p class="page-subtitle">
+            Purchase coins to unlock premium notes and support our amazing content creators. 
+            Every coin spent goes directly to the note uploaders!
+        </p>
+    </div>
+
+    <!-- Current Balance -->
+    <div class="current-balance">
+        <div class="balance-content">
+            <div class="balance-amount">
+                <i class="fas fa-coins"></i> {{ session.get('user_coins', 0) if session.user_id else 0 }}
+            </div>
+            <div class="balance-label">Current Balance</div>
+        </div>
+    </div>
+
+    <!-- Coin Packages -->
+    <div class="coin-packages">
+        <div class="package-card">
+            <div class="package-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="package-coins">100</div>
+            <div class="package-price">₹100</div>
+            <div class="package-value">Best for Starters</div>
+            <ul class="package-features">
+                <li><i class="fas fa-check"></i> 100 Coins</li>
+                <li><i class="fas fa-check"></i> Perfect for 5-10 premium notes</li>
+                <li><i class="fas fa-check"></i> Instant delivery</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="package" value="basic">
+                <button type="submit" class="buy-btn">Buy Now</button>
+            </form>
+        </div>
+
+        <div class="package-card popular">
+            <div class="package-badge">Most Popular</div>
+            <div class="package-icon">
+                <i class="fas fa-gem"></i>
+            </div>
+            <div class="package-coins">500</div>
+            <div class="package-price">₹450</div>
+            <div class="package-value">Save ₹50!</div>
+            <ul class="package-features">
+                <li><i class="fas fa-check"></i> 500 Coins</li>
+                <li><i class="fas fa-check"></i> 10% bonus coins</li>
+                <li><i class="fas fa-check"></i> Perfect for regular users</li>
+                <li><i class="fas fa-check"></i> Priority support</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="package" value="popular">
+                <button type="submit" class="buy-btn">Buy Now</button>
+            </form>
+        </div>
+
+        <div class="package-card">
+            <div class="package-icon">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div class="package-coins">1000</div>
+            <div class="package-price">₹800</div>
+            <div class="package-value">Save ₹200!</div>
+            <ul class="package-features">
+                <li><i class="fas fa-check"></i> 1000 Coins</li>
+                <li><i class="fas fa-check"></i> 25% bonus coins</li>
+                <li><i class="fas fa-check"></i> Best value for money</li>
+                <li><i class="fas fa-check"></i> VIP badge</li>
+            </ul>
+            <form method="POST">
+                <input type="hidden" name="package" value="premium">
+                <button type="submit" class="buy-btn">Buy Now</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Information -->
+    <div class="payment-info">
+        <h3>
+            <i class="fas fa-credit-card"></i>
+            Accepted Payment Methods
+        </h3>
+        <p style="color: #718096; margin-bottom: 1rem;">
+            We support all major payment methods popular in Nepal. Your transactions are secure and processed instantly.
+        </p>
+        
+        <div class="payment-methods">
+            <div class="payment-method esewa">
+                <i class="fas fa-wallet"></i>
+                <div>eSewa</div>
+            </div>
+            <div class="payment-method khalti">
+                <i class="fas fa-mobile-alt"></i>
+                <div>Khalti</div>
+            </div>
+            <div class="payment-method imepay">
+                <i class="fas fa-university"></i>
+                <div>IME Pay</div>
+            </div>
+            <div class="payment-method">
+                <i class="fas fa-credit-card"></i>
+                <div>Credit Card</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage Tips -->
+    <div class="usage-tips">
+        <h3>
+            <i class="fas fa-lightbulb"></i>
+            How to Use Your Coins
+        </h3>
+        <ul class="tips-list">
+            <li>
+                <i class="fas fa-shopping-cart"></i>
+                <div>
+                    <strong>Purchase Premium Notes:</strong> Use coins to unlock high-quality notes from top students and educators.
+                </div>
+            </li>
+            <li>
+                <i class="fas fa-heart"></i>
+                <div>
+                    <strong>Support Creators:</strong> Every coin you spend goes directly to the note uploader, encouraging quality content.
+                </div>
+            </li>
+            <li>
+                <i class="fas fa-star"></i>
+                <div>
+                    <strong>Rate Answers:</strong> Earn coins by rating helpful answers in the forum - get 1 coin for each upvote you give!
+                </div>
+            </li>
+            <li>
+                <i class="fas fa-gift"></i>
+                <div>
+                    <strong>Welcome Bonus:</strong> New users get 10 free coins to start their learning journey!
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- FAQ Section -->
+    <div style="margin-top: 3rem; text-align: center;">
+        <h3 style="color: #2d3748; margin-bottom: 1rem;">Need Help?</h3>
+        <p style="color: #718096; margin-bottom: 2rem;">
+            Have questions about our coin system? We're here to help!
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('forum') }}" class="btn-cta" style="text-decoration: none;">
+                <i class="fas fa-question-circle"></i> Visit FAQ
+            </a>
+            <a href="mailto:support@notebazar.com" class="btn-cta" style="text-decoration: none; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <i class="fas fa-envelope"></i> Contact Support
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-cta {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add loading state to buy buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const buyButtons = document.querySelectorAll('.buy-btn');
+        
+        buyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                this.disabled = true;
+            });
+        });
+
+        // Animate package cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        const packageCards = document.querySelectorAll('.package-card');
+        packageCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+
+        // Add click animation to payment methods
+        const paymentMethods = document.querySelectorAll('.payment-method');
+        paymentMethods.forEach(method => {
+            method.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+    });
+
+    // Show toast notification for demo purchases
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.getElementById('toastContainer').appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+    }
+
+    // Demo mode notification (remove in production)
+    if (window.location.search.includes('demo')) {
+        setTimeout(() => {
+            showToast('This is a demo purchase. In production, integrate with real payment gateways.', 'info');
+        }, 1000);
+    }
+</script>
+
+<style>
+    .toast {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid #22c55e;
+        animation: slideIn 0.3s ease;
+    }
+
+    .toast-success { border-left-color: #22c55e; }
+    .toast-error { border-left-color: #ef4444; }
+    .toast-info { border-left-color: #3b82f6; }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #374151;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+{% endblock %}

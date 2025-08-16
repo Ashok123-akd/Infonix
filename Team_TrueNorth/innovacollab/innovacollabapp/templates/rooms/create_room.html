@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Room - InnovaCollab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fa fa-plus-circle"></i> Create New Learning Room</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Basic Information</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="title" class="form-label">Room Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" required
+                                       placeholder="Enter an engaging title for your room">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description *</label>
+                                <textarea class="form-control" id="description" name="description" rows="4" required
+                                          placeholder="Describe what students will learn in this room"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="category" class="form-label">Category *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select a category</option>
+                                    {% for value, label in categories %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="difficulty_level" class="form-label">Difficulty Level *</label>
+                                <select class="form-select" id="difficulty_level" name="difficulty_level" required>
+                                    <option value="">Select difficulty</option>
+                                    {% for value, label in difficulties %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="admin_image" class="form-label">Admin Image *</label>
+                                <input type="file" class="form-control" id="admin_image" name="admin_image" 
+                                       accept="image/*">
+                                <small class="text-muted">Upload an attractive image for the admin Profile Image</small>
+                            </div>
+                        </div> -->
+                        
+                        <!-- Room Settings -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Room Settings</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="capacity" class="form-label">Maximum Capacity</label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" 
+                                       value="50" min="1" max="1000">
+                                <small class="text-muted">Maximum number of students allowed</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="premium_price" class="form-label">Premium Price (Rs.)</label>
+                                <input type="number" class="form-control" id="premium_price" name="premium_price" 
+                                       value="0.00" min="0" step="0.01">
+                                <small class="text-muted">Set to 0 for free-only room</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="room_image" class="form-label">Room Image *</label>
+                                <input type="file" class="form-control" id="room_image" name="room_image" 
+                                       accept="image/*">
+                                <small class="text-muted">Upload an attractive image for your room</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Content Description -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Content Information</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="free_content_description" class="form-label">Free Content Description</label>
+                                <textarea class="form-control" id="free_content_description" name="free_content_description" rows="3"
+                                          placeholder="Describe what free users will have access to"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="premium_content_description" class="form-label">Premium Content Description</label>
+                                <textarea class="form-control" id="premium_content_description" name="premium_content_description" rows="3"
+                                          placeholder="Describe the additional features premium users will get"></textarea>
+                                <small class="text-muted">Leave empty if no premium features</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6><i class="fa fa-info-circle"></i> Preview</h6>
+                                    <p class="mb-0">Your room will be visible to all users once created. Students can choose between free and premium enrollment options based on your pricing.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+                                        <i class="fa fa-arrow-left"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-save"></i> Create Room
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation and preview
+document.addEventListener('DOMContentLoaded', function() {
+    const premiumPriceInput = document.getElementById('premium_price');
+    const premiumContentDescription = document.getElementById('premium_content_description');
+    
+    // Show/hide premium content description based on price
+    premiumPriceInput.addEventListener('input', function() {
+        const price = parseFloat(this.value) || 0;
+        const premiumSection = premiumContentDescription.closest('.row');
+        
+        if (price > 0) {
+            premiumSection.style.display = 'block';
+            premiumContentDescription.setAttribute('placeholder', 'Describe the additional features premium users will get (required for paid rooms)');
+        } else {
+            premiumSection.style.display = 'block'; // Keep visible but optional
+            premiumContentDescription.setAttribute('placeholder', 'Describe the additional features premium users will get (optional for free rooms)');
+        }
+    });
+    
+    // Image preview
+    const imageInput = document.getElementById('room_image');
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // You can add image preview functionality here
+                console.log('Image selected:', file.name);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
+
+<style>
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+</style>
+{% endblock %}

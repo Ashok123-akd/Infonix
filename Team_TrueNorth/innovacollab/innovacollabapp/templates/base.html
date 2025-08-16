@@ -1,0 +1,192 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}InnovaCollab E-Learning Platform{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+</head>
+<body>
+    <!-- Navbar Start -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
+        <div class="container">
+            <a href="{% url 'index' %}" class="navbar-brand">
+                <div class="d-flex align-items-center">
+                    <div class="brand-icon me-3">
+                        <i class="fas fa-graduation-cap text-primary fs-2"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0 brand-text">InnovaCollab</h3>
+                        <small class="text-muted brand-tagline">Smart Learning Platform</small>
+                    </div>
+                </div>
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'index' %}">
+                            <i class="fas fa-home me-2"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'room_list' %}">
+                            <i class="fas fa-search me-2"></i>Browse Rooms
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'create_room' %}">
+                            <i class="fas fa-plus-circle me-2"></i>Create Room
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'my_enrollments' %}">
+                            <i class="fas fa-bookmark me-2"></i>My Enrollments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'my_rooms' %}">
+                            <i class="fas fa-users-cog me-2"></i>My Rooms
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <div class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="user-avatar me-2">
+                                <i class="fas fa-user-circle fs-4 text-primary"></i>
+                            </div>
+                            <span>{{ user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'signin' %}" class="btn btn-outline-primary">Login</a>
+                        <a href="{% url 'signup' %}" class="btn btn-primary">Sign Up</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+
+
+
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer text-white py-5 mt-5" style="background-color: #1a1a1a;">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="fas fa-graduation-cap text-primary fs-2 me-3"></i>
+                        <div>
+                            <h4 class="mb-0 text-white">InnovaCollab</h4>
+                            <small class="text-light opacity-75">Smart Learning Platform</small>
+                        </div>
+                    </div>
+                    <p class="text-light opacity-75">Empowering learners worldwide through innovative collaboration and cutting-edge educational technology.</p>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-primary mb-3">Platform</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'room_list' %}" class="text-light text-decoration-none opacity-75 footer-link">Browse Rooms</a></li>
+                        <li class="mb-2"><a href="{% url 'create_room' %}" class="text-light text-decoration-none opacity-75 footer-link">Create Room</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none opacity-75 footer-link">Features</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="text-primary mb-3">Support</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none opacity-75 footer-link">Help Center</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none opacity-75 footer-link">Contact Us</a></li>
+                        <li class="mb-2"><a href="#" class="text-light text-decoration-none opacity-75 footer-link">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h5 class="text-primary mb-3">Stay Connected</h5>
+                    <p class="text-light opacity-75">Get the latest updates and news from InnovaCollab</p>
+                    <div class="social-links">
+                        <a href="#" class="text-primary me-3 fs-4 social-icon"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-primary me-3 fs-4 social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-primary me-3 fs-4 social-icon"><i class="fab fa-linkedin"></i></a>
+                        <a href="#" class="text-primary me-3 fs-4 social-icon"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-light opacity-75">&copy; 2025 InnovaCollab. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="#" class="text-light text-decoration-none me-3 opacity-75 footer-link">Privacy Policy</a>
+                    <a href="#" class="text-light text-decoration-none opacity-75 footer-link">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add active class to current nav item
+        const currentLocation = location.pathname;
+        const menuItems = document.querySelectorAll('.navbar-nav .nav-link');
+        menuItems.forEach(item => {
+            if(item.getAttribute('href') === currentLocation) {
+                item.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}My Rooms - InnovaCollab{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="text-primary mb-2">
+                        <i class="fa fa-chalkboard-teacher me-2"></i>My Created Rooms
+                    </h2>
+                    <p class="text-muted">Manage and view the learning rooms you've created</p>
+                </div>
+                <a href="{% url 'create_room' %}" class="btn btn-primary btn-lg">
+                    <i class="fa fa-plus me-2"></i>Create New Room
+                </a>
+            </div>
+            
+            <!-- Rooms Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-1">{{ total_rooms }}</h3>
+                            <small>Total Rooms</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-1">{{ total_enrollments }}</h3>
+                            <small>Total Students</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-1">{{ active_rooms }}</h3>
+                            <small>Active Rooms</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h3 class="mb-1">{{ premium_rooms }}</h3>
+                            <small>Premium Rooms</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if rooms %}
+                <!-- Rooms Grid -->
+                <div class="row">
+                    {% for room in rooms %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            {% if room.room_image %}
+                                <img src="{{ room.room_image.url }}" class="card-img-top" 
+                                     style="height: 200px; object-fit: cover;" alt="{{ room.title }}">
+                            {% else %}
+                                <div class="card-img-top bg-primary d-flex align-items-center justify-content-center" 
+                                     style="height: 200px;">
+                                    <i class="fa fa-book text-white fa-4x"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-primary">{{ room.get_category_display }}</span>
+                                        <span class="badge bg-secondary">{{ room.get_difficulty_level_display }}</span>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                                type="button" data-bs-toggle="dropdown">
+                                            <i class="fa fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'room_view' room.id %}">
+                                                    <i class="fa fa-eye me-2"></i>View Room
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'room_detail' room.pk %}">
+                                                    <i class="fa fa-info-circle me-2"></i>Room Details
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-warning" href="#" onclick="alert('Edit functionality coming soon!')">
+                                                    <i class="fa fa-edit me-2"></i>Edit Room
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" onclick="alert('Delete functionality coming soon!')">
+                                                    <i class="fa fa-trash me-2"></i>Delete Room
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="card-title">{{ room.title }}</h5>
+                                <p class="card-text text-muted">{{ room.description|truncatewords:15 }}</p>
+                                
+                                <!-- Room Stats -->
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <div class="border-end">
+                                            <h6 class="mb-1 text-primary">{{ room.get_total_enrollments }}</h6>
+                                            <small class="text-muted">Students</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="border-end">
+                                            <h6 class="mb-1 text-success">{{ room.capacity }}</h6>
+                                            <small class="text-muted">Capacity</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        {% if room.premium_price > 0 %}
+                                            <h6 class="mb-1 text-warning">${{ room.premium_price }}</h6>
+                                            <small class="text-muted">Premium</small>
+                                        {% else %}
+                                            <h6 class="mb-1 text-info">Free</h6>
+                                            <small class="text-muted">Access</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">
+                                            <i class="fa fa-calendar me-1"></i>
+                                            {{ room.created_date|date:"M d, Y" }}
+                                        </small>
+                                        {% if room.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                                        <a href="{% url 'room_view' room.id %}" class="btn btn-primary btn-sm">
+                                            <i class="fa fa-eye me-1"></i>View Room
+                                        </a>
+                                        <a href="{% url 'room_detail' room.pk %}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-info-circle me-1"></i>Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination if needed -->
+                {% if rooms.has_other_pages %}
+                <nav aria-label="My rooms pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if rooms.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ rooms.previous_page_number }}">
+                                <i class="fa fa-arrow-left me-1"></i>Previous
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in rooms.paginator.page_range %}
+                            {% if rooms.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if rooms.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ rooms.next_page_number }}">
+                                Next<i class="fa fa-arrow-right ms-1"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+            {% else %}
+                <!-- No Rooms Found -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body text-center py-5">
+                                <div class="mb-4">
+                                    <i class="fa fa-chalkboard-teacher text-muted" style="font-size: 6rem;"></i>
+                                </div>
+                                <h3 class="text-muted mb-3">No Rooms Created Yet</h3>
+                                <p class="text-muted mb-4">
+                                    Start your teaching journey by creating your first learning room! 
+                                    Share your knowledge and help students learn effectively.
+                                </p>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a href="{% url 'create_room' %}" class="btn btn-primary btn-lg">
+                                        <i class="fa fa-plus me-2"></i>Create Your First Room
+                                    </a>
+                                    <a href="{% url 'room_list' %}" class="btn btn-outline-primary btn-lg">
+                                        <i class="fa fa-search me-2"></i>Browse Other Rooms
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS for enhanced styling -->
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.dropdown-toggle::after {
+    display: none;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}
+
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

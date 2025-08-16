@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Premium Enrollment - {{ room.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Room Info Header -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="text-primary mb-1">{{ room.title }}</h4>
+                            <p class="text-muted mb-2">
+                                <i class="fas fa-user"></i> {{ room.instructor.get_full_name|default:room.instructor.username }}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-tag"></i> {{ room.get_category_display }}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-layer-group"></i> {{ room.get_difficulty_level_display }}
+                            </p>
+                            <h5 class="text-success mb-0">
+                                <i class="fas fa-crown"></i> Premium Plan: ${{ room.premium_price }}
+                            </h5>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            {% if room.room_image %}
+                                <img src="{{ room.room_image.url }}" alt="{{ room.title }}" class="img-fluid rounded" style="max-height: 80px;">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premium Enrollment Form -->
+            <div class="card shadow">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-crown"></i> Premium Enrollment Form
+                    </h3>
+                    <small>Complete your profile for premium access and face authentication</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="premiumEnrollmentForm">
+                        {% csrf_token %}
+                        
+                        <!-- Personal Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-user"></i> Personal Information
+                                </h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" 
+                                       value="{{ user.get_full_name }}" required
+                                       placeholder="Enter your full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user.email }}" required
+                                       placeholder="Enter your email">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="phone_number" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                       value="{{ user_profile.phone_number|default:'' }}" required
+                                       placeholder="+977-98XXXXXXXX">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="age" class="form-label">Age *</label>
+                                <input type="number" class="form-control" id="age" name="age" 
+                                       value="{{ user_profile.age|default:'' }}" min="13" max="100" required
+                                       placeholder="Enter your age">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
+                                       value="{{ user_profile.date_of_birth|date:'Y-m-d'|default:'' }}">
+                            </div>
+                        </div>
+
+                        <!-- Profile Picture for Face Authentication -->
+                        <!-- <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-camera"></i> Profile Picture for Face Authentication
+                                </h5>
+                            </div>
+                        </div> -->
+
+                        <div class="row mb-3">
+                            <!-- <div class="col-md-8">
+                                <label for="profile_picture" class="form-label">Upload Profile Picture *</label>
+                                <input type="file" class="form-control" id="profile_picture" name="profile_picture" 
+                                       accept="image/*" required>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Please upload a clear photo of your face. This will be used for secure face authentication.
+                                    <br>Supported formats: JPG, PNG, GIF. Max size: 5MB.
+                                </div>
+                            </div> -->
+                            <!-- <div class="col-md-4">
+                                {% if user_profile.profile_picture %}
+                                    <div class="text-center">
+                                        <img src="{{ user_profile.profile_picture.url }}" alt="Current Profile" 
+                                             class="img-fluid rounded-circle" style="max-width: 100px; max-height: 100px;">
+                                        <small class="d-block text-muted">Current Picture</small>
+                                    </div>
+                                {% endif %}
+                            </div> -->
+                        </div>
+
+                        <!-- Bio Section -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">
+                                    <i class="fas fa-align-left"></i> Additional Information
+                                </h5>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label for="bio" class="form-label">Bio / About Yourself</label>
+                                <textarea class="form-control" id="bio" name="bio" rows="3" 
+                                          placeholder="Tell us a bit about yourself, your interests, and learning goals...">{{ user_profile.bio|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Premium Features Info -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-crown text-warning"></i> Premium Features You'll Get:</h6>
+                                    <ul class="mb-0">
+                                        <li>{{ room.premium_content_description|default:"Full access to all course materials" }}</li>
+                                        <li><i class="fas fa-microphone"></i> Voice Assistant Chatbot </li>
+                                        <li><i class="fas fa-headset"></i> Priority Support</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms_agreement" required>
+                                    <label class="form-check-label" for="terms_agreement">
+                                        I agree to the <a href="#" class="text-primary">Terms and Conditions</a> and 
+                                        <a href="#" class="text-primary">Privacy Policy</a>. I consent to the collection 
+                                        and use of my biometric data for authentication purposes.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                    <a href="{{ room.get_absolute_url }}" class="btn btn-secondary me-md-2">
+                                        <i class="fas fa-arrow-left"></i> Back to Room
+                                    </a>
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-credit-card"></i> Submit and Pay (${{ room.premium_price }})
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for form validation and preview -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Profile picture preview
+    const profilePictureInput = document.getElementById('profile_picture');
+    const form = document.getElementById('premiumEnrollmentForm');
+    
+    profilePictureInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                e.target.value = '';
+                return;
+            }
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                e.target.value = '';
+                return;
+            }
+            
+            // Show preview (optional)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // You can add preview functionality here if needed
+                console.log('Image loaded successfully');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        const termsCheckbox = document.getElementById('terms_agreement');
+        if (!termsCheckbox.checked) {
+            e.preventDefault();
+            alert('Please accept the terms and conditions to proceed.');
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+}
+
+.alert-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-success {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(45deg, #218838, #1e7e34);
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

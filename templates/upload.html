@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Note - NoteBazar{% endblock %}
+
+{% block content %}
+<div class="upload-page">
+    <div class="upload-container">
+        <div class="upload-header">
+            <h1 class="page-title">Share Your Knowledge</h1>
+            <p class="page-subtitle">Upload your notes and help others learn while earning coins</p>
+        </div>
+        
+        <div class="upload-form-container">
+            <form class="upload-form" action="{{ url_for('upload_note') }}" method="post" enctype="multipart/form-data">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Note Information
+                    </h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="title">Title *</label>
+                            <input type="text" id="title" name="title" class="form-input" required 
+                                   placeholder="Enter a descriptive title for your note">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="subject">Subject *</label>
+                            <select id="subject" name="subject" class="form-select" required>
+                                <option value="">Select a subject</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Economics">Economics</option>
+                                <option value="History">History</option>
+                                <option value="Literature">Literature</option>
+                                <option value="Psychology">Psychology</option>
+                                <option value="Philosophy">Philosophy</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="description">Description *</label>
+                        <textarea id="description" name="description" class="form-textarea" required 
+                                  placeholder="Describe what your note covers, key topics, and what makes it valuable"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-file-upload"></i>
+                        File Upload
+                    </h3>
+                    
+                    <div class="file-upload-area" onclick="document.getElementById('noteFile').click()">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="upload-text">
+                            <strong>Click to upload</strong> or drag and drop
+                        </div>
+                        <div class="upload-hint">
+                            PDF, DOC, DOCX, TXT (Max 16MB)
+                        </div>
+                        <input type="file" id="noteFile" name="file" accept=".pdf,.doc,.docx,.txt" 
+                               style="display: none;" required>
+                    </div>
+                    
+                    <div id="filePreview" class="file-preview-container"></div>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-coins"></i>
+                        Pricing
+                    </h3>
+                    
+                    <div class="pricing-options">
+                        <label class="pricing-option">
+                            <input type="radio" name="pricing" value="free" checked 
+                                   onchange="updatePricing(this)">
+                            <div class="option-card">
+                                <div class="option-icon free">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <div class="option-content">
+                                    <strong>Free</strong>
+                                    <span>Share for free and build your reputation</span>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="pricing-option">
+                            <input type="radio" name="pricing" value="paid" 
+                                   onchange="updatePricing(this)">
+                            <div class="option-card">
+                                <div class="option-icon paid">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div class="option-content">
+                                    <strong>Premium</strong>
+                                    <span>Set a price and earn coins from downloads</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div id="priceInput" class="price-input-group" style="display: none;">
+                        <label class="form-label" for="price">Price (coins)</label>
+                        <input type="number" id="price" name="price" class="form-input" 
+                               min="1" max="100" placeholder="Enter price in coins">
+                        <div class="price-hint">
+                            <i class="fas fa-lightbulb"></i>
+                            Suggested: 5-20 coins for most notes
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="history.back()">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-upload"></i>
+                        Upload Note
+                    </button>
+                </div>
+            </form>
+            
+            <div class="upload-tips">
+                <h4>Tips for Success</h4>
+                <ul>
+                    <li><i class="fas fa-check"></i> Use clear, descriptive titles</li>
+                    <li><i class="fas fa-check"></i> Write detailed descriptions</li>
+                    <li><i class="fas fa-check"></i> Ensure content is well-organized</li>
+                    <li><i class="fas fa-check"></i> Price fairly to encourage downloads</li>
+                    <li><i class="fas fa-check"></i> Regular uploads build your reputation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-page {
+    padding: var(--space-xl) 0 var(--space-3xl);
+    background: var(--bg-secondary);
+    min-height: calc(100vh - 70px);
+}
+
+.upload-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+}
+
+.upload-header {
+    text-align: center;
+    margin-bottom: var(--space-3xl);
+}
+
+.page-title {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--space-md);
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+}
+
+.upload-form-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: var(--space-3xl);
+}
+
+.upload-form {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-3xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.form-section {
+    margin-bottom: var(--space-3xl);
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-xl);
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-light);
+    padding-bottom: var(--space-md);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+}
+
+.file-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3xl);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-secondary);
+}
+
+.file-upload-area:hover {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-lg);
+}
+
+.upload-text {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-sm);
+}
+
+.upload-hint {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.file-preview-container {
+    margin-top: var(--space-lg);
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.file-preview i {
+    font-size: var(--font-size-2xl);
+    color: #667eea;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.file-size {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.pricing-options {
+    display: grid;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+.pricing-option input[type="radio"] {
+    display: none;
+}
+
+.option-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.pricing-option input[type="radio"]:checked + .option-card {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.option-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    color: white;
+}
+
+.option-icon.free {
+    background: var(--success);
+}
+
+.option-icon.paid {
+    background: #f59e0b;
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.option-content strong {
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+}
+
+.option-content span {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.price-input-group {
+    padding: var(--space-lg);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.price-hint {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-lg);
+    justify-content: flex-end;
+    margin-top: var(--space-3xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--border);
+}
+
+.upload-tips {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+}
+
+.upload-tips h4 {
+    margin-bottom: var(--space-lg);
+    color: var(--text-primary);
+}
+
+.upload-tips ul {
+    list-style: none;
+    padding: 0;
+}
+
+.upload-tips li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    color: var(--text-secondary);
+}
+
+.upload-tips li i {
+    color: var(--success);
+    width: 16px;
+}
+
+@media (max-width: 1024px) {
+    .upload-form-container {
+        grid-template-columns: 1fr;
+        gap: var(--space-xl);
+    }
+}
+
+@media (max-width: 640px) {
+    .upload-form {
+        padding: var(--space-xl);
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function updatePricing(radio) {
+    const priceInput = document.getElementById('priceInput');
+    const priceField = document.getElementById('price');
+    
+    if (radio.value === 'paid') {
+        priceInput.style.display = 'block';
+        priceField.required = true;
+    } else {
+        priceInput.style.display = 'none';
+        priceField.required = false;
+        priceField.value = '';
+    }
+}
+
+// File upload handling
+document.getElementById('noteFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const previewContainer = document.getElementById('filePreview');
+    
+    if (file) {
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+        const fileIcon = getFileIcon(file.name);
+        
+        previewContainer.innerHTML = `
+            <div class="file-preview">
+                <i class="${fileIcon}"></i>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${fileSize} MB</div>
+                </div>
+            </div>
+        `;
+    }
+});
+
+function getFileIcon(filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+    switch (extension) {
+        case 'pdf':
+            return 'fas fa-file-pdf';
+        case 'doc':
+        case 'docx':
+            return 'fas fa-file-word';
+        case 'txt':
+            return 'fas fa-file-alt';
+        default:
+            return 'fas fa-file';
+    }
+}
+
+// Drag and drop functionality
+const uploadArea = document.querySelector('.file-upload-area');
+const fileInput = document.getElementById('noteFile');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#667eea';
+    uploadArea.style.background = 'rgba(102, 126, 234, 0.05)';
+});
+
+uploadArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'var(--border)';
+    uploadArea.style.background = 'var(--bg-secondary)';
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'var(--border)';
+    uploadArea.style.background = 'var(--bg-secondary)';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        fileInput.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

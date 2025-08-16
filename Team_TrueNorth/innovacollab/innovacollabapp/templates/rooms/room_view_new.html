@@ -1,0 +1,1178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ room.title }} - Learning Room{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Room Header -->
+        <div class="row mb-5">
+            <div class="col-lg-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h1 class="h2 text-primary mb-2">{{ room.title }}</h1>
+                                <p class="text-muted mb-3">{{ room.description|truncatewords:20 }}</p>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2">{{ room.get_category_display }}</span>
+                                    <span class="badge bg-info me-2">{{ room.get_difficulty_level_display }}</span>
+                                    {% if is_premium %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-star-fill"></i> Premium Member
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-person"></i> Free Member
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                {% if room.room_image %}
+                                    <img src="{{ room.room_image.url }}" alt="{{ room.title }}" 
+                                         class="img-fluid rounded" style="max-height: 150px;">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-lg-8">
+                <!-- Navigation Tabs -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <ul class="nav nav-tabs card-header-tabs" id="roomTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="materials-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#materials" type="button" role="tab">
+                                    <i class="bi bi-book me-2"></i>Study Materials
+                                </button>
+                            </li>
+                            {% if is_premium %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="chatbot-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#chatbot" type="button" role="tab">
+                                    <i class="bi bi-robot me-2"></i>AI Assistant
+                                </button>
+                            </li>
+                            <!-- <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tts-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#tts" type="button" role="tab">
+                                    <i class="bi bi-volume-up me-2"></i>Text-to-Speech
+                                </button>
+                            </li> -->
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="roomTabsContent">
+                            <!-- Study Materials Tab -->
+                            <div class="tab-pane fade show active" id="materials" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <h5 class="mb-0">Course Study Materials</h5>
+                                    {% if can_create_material %}
+                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createMaterialModal">
+                                        <i class="bi bi-plus-circle me-1"></i>Add Material
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="list-group">
+                                    {% for material in study_materials %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="{{ material.get_icon_class }} text-primary me-2"></i>
+                                                    <h6 class="mb-0">{{ material.title }}</h6>
+                                                    {% if material.access_level == 'premium' %}
+                                                        <span class="badge bg-warning text-dark ms-2">Premium</span>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="mb-1 text-muted">{{ material.description|truncatewords:20 }}</p>
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <span class="me-3">
+                                                        <i class="bi bi-person-circle me-1"></i>{{ material.author.username }}
+                                                    </span>
+                                                    <span class="me-3">
+                                                        <i class="bi bi-calendar me-1"></i>{{ material.created_date|date:"M d, Y" }}
+                                                    </span>
+                                                    {% if material.material_type == 'pdf' and material.page_count %}
+                                                        <span class="me-3">{{ material.page_count }} pages</span>
+                                                    {% endif %}
+                                                    {% if material.file_size %}
+                                                        <span class="me-3">{{ material.file_size|filesizeformat }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="btn-group" role="group">
+                                                {% if material.external_link %}
+                                                    <a href="{{ material.external_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-link-45deg me-1"></i>Open Link
+                                                    </a>
+                                                {% elif material.file_upload or material.content %}
+                                                    <a href="{% url 'view_study_material' room.id material.id %}" class="btn btn-outline-primary btn-sm me-2">
+                                                        <i class="bi bi-eye me-1"></i>View
+                                                    </a>
+                                                {% endif %}
+                                                
+                                                {% if material.file_upload %}
+                                                    {% if material.access_level == 'free' or is_premium %}
+                                                        <a href="{% url 'download_study_material' room.id material.id %}" class="btn btn-success btn-sm me-2">
+                                                            <i class="bi bi-download me-1"></i>Download
+                                                        </a>
+                                                    {% else %}
+                                                        <button class="btn btn-secondary btn-sm me-2" disabled>
+                                                            <i class="bi bi-lock me-1"></i>Premium Only
+                                                        </button>
+                                                    {% endif %}
+                                                {% endif %}
+                                                
+                                                {% if material.can_edit %}
+                                                    <div class="btn-group" role="group">
+                                                        <!-- <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                            <i class="bi bi-three-dots"></i>
+                                                        </button> -->
+                                                        <!-- <ul class="dropdown-menu">
+                                                            <li><a class="dropdown-item" href="#" data-material-id="{{ material.id }}" onclick="event.preventDefault(); console.log('Edit button clicked for material:', this.getAttribute('data-material-id')); loadMaterialForEdit(this.getAttribute('data-material-id')); return false;">
+                                                                <i class="bi bi-pencil me-2"></i>Edit
+                                                            </a></li>
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li><a class="dropdown-item text-danger" href="#" data-material-id="{{ material.id }}" data-material-title="{{ material.title }}" onclick="event.preventDefault(); console.log('Delete button clicked for material:', this.getAttribute('data-material-id')); deleteMaterial(this.getAttribute('data-material-id'), this.getAttribute('data-material-title')); return false;">
+                                                                <i class="bi bi-trash me-2"></i>Delete
+                                                            </a></li>
+                                                        </ul> -->
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Material content preview (if text type) -->
+                                        {% if material.material_type == 'text' and material.content %}
+                                        <div class="mt-3 p-3 bg-light rounded">
+                                            <small class="text-muted">Preview:</small>
+                                            <p class="mb-0 small">{{ material.content|truncatewords:50 }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% empty %}
+                                    <div class="list-group-item text-center py-5">
+                                        <i class="bi bi-folder2-open text-muted display-4 mb-3"></i>
+                                        <h6 class="text-muted">No Study Materials Yet</h6>
+                                        <p class="text-muted mb-3">Be the first to add study materials to this room!</p>
+                                        {% if can_create_material %}
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMaterialModal">
+                                            <i class="bi bi-plus-circle me-1"></i>Add First Material
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                    
+                                    {% if not is_premium and study_materials %}
+                                    <div class="list-group-item bg-light">
+                                        <div class="text-center py-3">
+                                            <i class="bi bi-star text-warning fs-1 mb-2"></i>
+                                            <h6 class="text-muted">Upgrade to Premium</h6>
+                                            <p class="text-muted small mb-3">Download all materials for offline access and get exclusive premium content</p>
+                                            <button class="btn btn-warning">
+                                                <i class="bi bi-star me-1"></i>Upgrade Now
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if is_premium %}
+                            <!-- AI Chatbot Tab (Premium Only) -->
+                            <div class="tab-pane fade" id="chatbot" role="tabpanel">
+                                <h5 class="mb-3">AI Assistant</h5>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-robot me-2"></i>
+                                    <strong>Premium Feature:</strong> Get instant help with our AI-powered assistant
+                                </div>
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <div class="mb-4">
+                                            <i class="bi bi-robot text-primary" style="font-size: 3rem;"></i>
+                                        </div>
+                                        <h6 class="mb-3">AI Course Assistant</h6>
+                                        <p class="text-muted mb-4">Ask questions about the course content, get explanations, and receive personalized help.</p>
+                                        <a href="{% url 'chatbot' room.id %}" class="btn btn-primary btn-lg">
+                                            <i class="bi bi-chat-dots me-2"></i>Start Chatting
+                                        </a>
+                                        <div class="mt-3">
+                                            <small class="text-muted">Available 24/7 • Powered by AI</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Text-to-Speech Tab (Premium Only) -->
+                            <div class="tab-pane fade" id="tts" role="tabpanel">
+                                <h5 class="mb-3">Text-to-Speech</h5>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-volume-up me-2"></i>
+                                    <strong>Premium Feature:</strong> Listen to course materials with voice synthesis and file reader
+                                </div>
+                                
+                                <!-- File Upload Section -->
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h6 class="mb-3">
+                                            <i class="bi bi-file-earmark-text me-2"></i>File Reader (Text-to-Speech)
+                                        </h6>
+                                        <p class="text-muted mb-3">Upload text files (.txt, .pdf, .doc, .docx) and have them read aloud as a hands-free service</p>
+                                        
+                                        <div class="row align-items-end mb-3">
+                                            <div class="col-md-8">
+                                                <label for="file-input" class="form-label small text-muted">Choose File</label>
+                                                <input type="file" id="file-input" accept=".txt,.doc,.docx,.pdf" class="form-control">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="btn-group w-100" role="group">
+                                                    <button id="upload-btn" class="btn btn-primary">
+                                                        <i class="bi bi-upload me-1"></i>Upload & Read
+                                                    </button>
+                                                </div>
+                                                <div class="btn-group w-100 d-none" id="reading-controls" role="group">
+                                                    <button id="pause-reading-btn" class="btn btn-warning btn-sm">
+                                                        <i class="bi bi-pause-fill me-1"></i>Pause
+                                                    </button>
+                                                    <button id="resume-reading-btn" class="btn btn-success btn-sm d-none">
+                                                        <i class="bi bi-play-fill me-1"></i>Resume
+                                                    </button>
+                                                    <button id="stop-reading-btn" class="btn btn-danger btn-sm">
+                                                        <i class="bi bi-stop-fill me-1"></i>Stop
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- File Status -->
+                                        <div id="file-status" class="alert d-none" role="alert"></div>
+
+                                        <!-- Reading Progress -->
+                                        <div id="reading-progress" class="d-none">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <small class="text-muted">Reading Progress</small>
+                                                <span id="reading-status" class="badge bg-info">Preparing to read...</span>
+                                            </div>
+                                            <div class="progress mb-3" style="height: 8px;">
+                                                <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                     role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Drag and Drop Area -->
+                                        <div class="border border-dashed rounded p-4 text-center text-muted" 
+                                             style="border-color: #dee2e6 !important;"
+                                             ondragover="event.preventDefault(); this.style.borderColor='#0d6efd'; this.style.backgroundColor='#f8f9ff';"
+                                             ondragleave="this.style.borderColor='#dee2e6'; this.style.backgroundColor='transparent';"
+                                             ondrop="handleFileDrop(event, this)">
+                                            <i class="bi bi-cloud-upload display-6 text-primary"></i>
+                                            <p class="mb-0">Drag and drop your file here or use the upload button above</p>
+                                            <small>Supports: TXT, PDF, DOC, DOCX files up to 10MB</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sample Content Section -->
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="mb-3">
+                                            <i class="bi bi-play-circle me-2"></i>Sample Content Player
+                                        </h6>
+                                        <p class="text-muted mb-4">Try the text-to-speech with sample course content</p>
+                                        
+                                        <!-- Sample TTS Content -->
+                                        <div class="border rounded p-3 mb-3 bg-light">
+                                            <h6 class="mb-2">Course Description</h6>
+                                            <p class="mb-3 small" id="sample-text">{{ room.description|truncatewords:30 }}</p>
+                                            <div class="row align-items-center">
+                                                <div class="col-md-6">
+                                                    <div class="btn-group" role="group">
+                                                        <button class="btn btn-success btn-sm" id="playTTS">
+                                                            <i class="bi bi-play-fill me-1"></i>Play
+                                                        </button>
+                                                        <button class="btn btn-warning btn-sm" id="pauseTTS" disabled>
+                                                            <i class="bi bi-pause-fill me-1"></i>Pause
+                                                        </button>
+                                                        <button class="btn btn-secondary btn-sm" id="stopTTS" disabled>
+                                                            <i class="bi bi-stop-fill me-1"></i>Stop
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center">
+                                                        <small class="text-muted me-2">Speed:</small>
+                                                        <input type="range" class="form-range flex-grow-1" id="speedRange" 
+                                                               min="0.5" max="2" step="0.1" value="1">
+                                                        <small class="text-muted ms-2" id="speedValue">1.0x</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-center">
+                                            <small class="text-muted">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Upload your own files above for personalized text-to-speech experience
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Feature Summary -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Your Access Level</h6>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-success mb-3">Free Features</h6>
+                        {% for feature in free_features %}
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="{{ feature.icon }} text-success me-2"></i>
+                            <span class="small">{{ feature.name }}</span>
+                            <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                        </div>
+                        <small class="text-muted d-block">{{ feature.description }}</small>
+                        {% endfor %}
+
+                        <hr>
+                        <h6 class="{% if is_premium %}text-warning{% else %}text-muted{% endif %} mb-3">
+                            Premium Features
+                            {% if is_premium %}
+                                <span class="badge bg-warning text-dark ms-2">Active</span>
+                            {% endif %}
+                        </h6>
+                        {% for feature in premium_features %}
+                        <div class="d-flex align-items-center mb-2 {% if not feature.available %}opacity-50{% endif %}">
+                            <i class="{{ feature.icon }} {% if feature.available %}text-warning{% else %}text-muted{% endif %} me-2"></i>
+                            <span class="small">{{ feature.name }}</span>
+                            {% if feature.available %}
+                                <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                            {% else %}
+                                <i class="bi bi-lock text-muted ms-auto"></i>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted d-block mb-2">{{ feature.description }}</small>
+                        {% endfor %}
+
+                        {% if not is_premium %}
+                        <div class="text-center mt-3">
+                            <button class="btn btn-warning w-100">
+                                <i class="bi bi-star me-2"></i>Upgrade to Premium
+                            </button>
+                            <small class="text-muted d-block mt-2">Unlock all premium features</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Room Details
+                            </a>
+                            {% if is_premium %}
+                            <button class="btn btn-success" onclick="alert('Support feature coming soon!')">
+                                <i class="bi bi-headset me-2"></i>Premium Support
+                            </button>
+                            {% else %}
+                            <button class="btn btn-outline-secondary" onclick="alert('Support feature coming soon!')">
+                                <i class="bi bi-chat-dots me-2"></i>Basic Support
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal (if any) -->
+{% if messages %}
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mb-0">{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Create Study Material Modal -->
+<div class="modal fade" id="createMaterialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Study Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'create_study_material' room.id %}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="access_level" class="form-label">Access Level</label>
+                                <select class="form-select" id="access_level" name="access_level">
+                                    <option value="free">Free Access</option>
+                                    <option value="premium">Premium Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="material_type" class="form-label">Material Type</label>
+                                <select class="form-select" id="material_type" name="material_type" onchange="toggleMaterialInputs()">
+                                    <option value="other">Other</option>
+                                    <option value="pdf">PDF Document</option>
+                                    <option value="video">Video</option>
+                                    <option value="image">Image</option>
+                                    <option value="text">Text Document</option>
+                                    <option value="link">External Link</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3" id="file-upload-group">
+                                <label for="file_upload" class="form-label">Upload File</label>
+                                <input type="file" class="form-control" id="file_upload" name="file_upload">
+                                <div class="form-text">Maximum file size: 50MB</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="external-link-group" style="display: none;">
+                        <label for="external_link" class="form-label">External Link</label>
+                        <input type="url" class="form-control" id="external_link" name="external_link" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="mb-3" id="content-group" style="display: none;">
+                        <label for="content" class="form-label">Text Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" placeholder="Enter your text content here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Study Material Modal -->
+<div class="modal fade" id="editMaterialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Study Material</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="editMaterialForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="edit_title" class="form-label">Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_title" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="edit_access_level" class="form-label">Access Level</label>
+                                <select class="form-select" id="edit_access_level" name="access_level">
+                                    <option value="free">Free Access</option>
+                                    <option value="premium">Premium Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_material_type" class="form-label">Material Type</label>
+                                <select class="form-select" id="edit_material_type" name="material_type" onchange="toggleEditMaterialInputs()">
+                                    <option value="other">Other</option>
+                                    <option value="pdf">PDF Document</option>
+                                    <option value="video">Video</option>
+                                    <option value="image">Image</option>
+                                    <option value="text">Text Document</option>
+                                    <option value="link">External Link</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3" id="edit-file-upload-group">
+                                <label for="edit_file_upload" class="form-label">Replace File (Optional)</label>
+                                <input type="file" class="form-control" id="edit_file_upload" name="file_upload">
+                                <div class="form-text">Leave empty to keep current file. Maximum: 50MB</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="edit-external-link-group" style="display: none;">
+                        <label for="edit_external_link" class="form-label">External Link</label>
+                        <input type="url" class="form-control" id="edit_external_link" name="external_link" placeholder="https://example.com">
+                    </div>
+                    
+                    <div class="mb-3" id="edit-content-group" style="display: none;">
+                        <label for="edit_content" class="form-label">Text Content</label>
+                        <textarea class="form-control" id="edit_content" name="content" rows="5" placeholder="Enter your text content here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteMaterialModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the study material "<span id="deleteMaterialTitle"></span>"?</p>
+                <p class="text-danger small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" id="deleteMaterialForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Material</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+}
+
+<script>
+// Study Material CRUD Functions
+function toggleMaterialInputs() {
+    const materialType = document.getElementById('material_type').value;
+    const fileGroup = document.getElementById('file-upload-group');
+    const linkGroup = document.getElementById('external-link-group');
+    const contentGroup = document.getElementById('content-group');
+    
+    // Reset display
+    fileGroup.style.display = 'block';
+    linkGroup.style.display = 'none';
+    contentGroup.style.display = 'none';
+    
+    if (materialType === 'link') {
+        fileGroup.style.display = 'none';
+        linkGroup.style.display = 'block';
+    } else if (materialType === 'text') {
+        contentGroup.style.display = 'block';
+    }
+}
+
+function toggleEditMaterialInputs() {
+    const materialType = document.getElementById('edit_material_type').value;
+    const fileGroup = document.getElementById('edit-file-upload-group');
+    const linkGroup = document.getElementById('edit-external-link-group');
+    const contentGroup = document.getElementById('edit-content-group');
+    
+    // Reset display
+    fileGroup.style.display = 'block';
+    linkGroup.style.display = 'none';
+    contentGroup.style.display = 'none';
+    
+    if (materialType === 'link') {
+        fileGroup.style.display = 'none';
+        linkGroup.style.display = 'block';
+    } else if (materialType === 'text') {
+        contentGroup.style.display = 'block';
+    }
+}
+
+function loadMaterialForEdit(materialId) {
+    // Fetch material data and populate the edit form
+    fetch(`/room/{{ room.id }}/material/${materialId}/data/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                const material = data.material;
+                
+                // Populate form fields
+                document.getElementById('edit_title').value = material.title || '';
+                document.getElementById('edit_description').value = material.description || '';
+                document.getElementById('edit_material_type').value = material.material_type || 'other';
+                document.getElementById('edit_access_level').value = material.access_level || 'free';
+                document.getElementById('edit_external_link').value = material.external_link || '';
+                document.getElementById('edit_content').value = material.content || '';
+                
+                // Set form action
+                document.getElementById('editMaterialForm').action = `/room/{{ room.id }}/material/${materialId}/edit/`;
+                
+                // Toggle input fields based on material type
+                toggleEditMaterialInputs();
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editMaterialModal'));
+                modal.show();
+            } else {
+                console.error('Server error:', data.error);
+                alert('Error loading material data: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Network or parse error:', error);
+            alert('Error loading material data. Please try again.');
+        });
+}
+
+function editMaterial(materialId) {
+    // Redirect to the new loadMaterialForEdit function
+    loadMaterialForEdit(materialId);
+}
+
+function deleteMaterial(materialId, materialTitle) {
+    // Set the material title in the modal
+    document.getElementById('deleteMaterialTitle').textContent = materialTitle;
+    
+    // Set the form action
+    const form = document.getElementById('deleteMaterialForm');
+    form.action = `/room/{{ room.id }}/material/${materialId}/delete/`;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteMaterialModal'));
+    modal.show();
+}
+
+function viewMaterial(fileUrl, materialType) {
+    if (materialType === 'pdf' || materialType === 'image') {
+        // Open in new tab for viewing
+        window.open(fileUrl, '_blank');
+    } else if (materialType === 'video') {
+        // You could implement a video player modal here
+        window.open(fileUrl, '_blank');
+    } else {
+        // For other types, download or open
+        window.open(fileUrl, '_blank');
+    }
+}
+
+<script>
+// CSRF Token for AJAX requests
+function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return '';
+}
+
+// Show message modal if there are messages
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+    var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    messageModal.show();
+    {% endif %}
+});
+
+// Enhanced Text-to-Speech functionality (Premium feature)
+{% if is_premium %}
+document.addEventListener('DOMContentLoaded', function() {
+    // Sample TTS Controls
+    const playBtn = document.getElementById('playTTS');
+    const pauseBtn = document.getElementById('pauseTTS');
+    const stopBtn = document.getElementById('stopTTS');
+    const speedRange = document.getElementById('speedRange');
+    const speedValue = document.getElementById('speedValue');
+    
+    // File Upload Controls
+    const uploadBtn = document.getElementById('upload-btn');
+    const stopReadingBtn = document.getElementById('stop-reading-btn');
+    const pauseReadingBtn = document.getElementById('pause-reading-btn');
+    const resumeReadingBtn = document.getElementById('resume-reading-btn');
+    const readingControls = document.getElementById('reading-controls');
+    const fileInput = document.getElementById('file-input');
+    const fileStatus = document.getElementById('file-status');
+    const readingProgress = document.getElementById('reading-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const readingStatus = document.getElementById('reading-status');
+    
+    let currentUtterance = null;
+    let isReading = false;
+    let isPaused = false;
+    let fileReadingSentences = [];
+    let currentSentenceIndex = 0;
+    let readingTimeout = null;
+
+    // Speed range update
+    if (speedRange && speedValue) {
+        speedRange.addEventListener('input', function() {
+            speedValue.textContent = parseFloat(this.value).toFixed(1) + 'x';
+            if (currentUtterance && !currentUtterance.speaking) {
+                currentUtterance.rate = parseFloat(this.value);
+            }
+        });
+    }
+
+    // Sample TTS Controls
+    if (playBtn) {
+        playBtn.addEventListener('click', function() {
+            if (isPaused && currentUtterance) {
+                speechSynthesis.resume();
+                isPaused = false;
+                playBtn.disabled = true;
+                pauseBtn.disabled = false;
+                return;
+            }
+
+            const text = "{{ room.description|truncatewords:30|escapejs }}";
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.rate = parseFloat(speedRange.value);
+            currentUtterance.lang = 'en-US';
+            
+            speechSynthesis.speak(currentUtterance);
+            playBtn.disabled = true;
+            pauseBtn.disabled = false;
+            stopBtn.disabled = false;
+            
+            currentUtterance.onend = function() {
+                resetSampleControls();
+            };
+        });
+    }
+
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', function() {
+            speechSynthesis.pause();
+            isPaused = true;
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+        });
+    }
+
+    if (stopBtn) {
+        stopBtn.addEventListener('click', function() {
+            speechSynthesis.cancel();
+            resetSampleControls();
+        });
+    }
+
+    function resetSampleControls() {
+        playBtn.disabled = false;
+        pauseBtn.disabled = true;
+        stopBtn.disabled = true;
+        isPaused = false;
+        currentUtterance = null;
+    }
+
+    // File Upload Functionality
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (file) {
+                handleFileUpload(file);
+            } else {
+                showFileStatus('Please select a file first', 'warning');
+            }
+        });
+    }
+
+    if (stopReadingBtn) {
+        stopReadingBtn.addEventListener('click', function() {
+            stopReading();
+        });
+    }
+
+    if (pauseReadingBtn) {
+        pauseReadingBtn.addEventListener('click', function() {
+            pauseReading();
+        });
+    }
+
+    if (resumeReadingBtn) {
+        resumeReadingBtn.addEventListener('click', function() {
+            resumeReading();
+        });
+    }
+
+    function handleFileUpload(file) {
+        // Validate file
+        const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 
+                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        
+        if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.txt')) {
+            showFileStatus('Unsupported file type. Please upload .txt, .pdf, .doc, or .docx files', 'danger');
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            showFileStatus('File too large. Please upload files smaller than 10MB', 'danger');
+            return;
+        }
+
+        showFileStatus(`Processing "${file.name}"...`, 'info');
+        showReadingProgress();
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/chat/read-file/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showFileStatus(`Successfully processed "${file.name}" - Ready to read ${data.character_count} characters`, 'success');
+                startFileReading(data.text, file.name);
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        })
+        .catch(error => {
+            console.error('File upload error:', error);
+            showFileStatus(`Error: ${error.message}`, 'danger');
+            hideReadingProgress();
+        });
+    }
+
+    function startFileReading(text, fileName) {
+        if (!window.speechSynthesis) {
+            showFileStatus('Text-to-speech is not supported in this browser', 'danger');
+            return;
+        }
+
+        stopReading(); // Stop any current reading
+
+        // Split text into sentences for better control and progress tracking
+        fileReadingSentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+        currentSentenceIndex = 0;
+
+        // Limit reading to prevent infinite reading (max 200 sentences or 15 minutes)
+        const maxSentences = Math.min(fileReadingSentences.length, 200);
+        fileReadingSentences = fileReadingSentences.slice(0, maxSentences);
+
+        if (fileReadingSentences.length > 100) {
+            const confirmRead = confirm(`This file contains ${fileReadingSentences.length} sentences. This may take a long time to read (approximately ${Math.ceil(fileReadingSentences.length * 3 / 60)} minutes). Do you want to continue?`);
+            if (!confirmRead) {
+                showFileStatus('Reading cancelled by user', 'info');
+                return;
+            }
+        }
+
+        isReading = true;
+        isPaused = false;
+        showReadingControls(true);
+        updateReadingStatus(`Starting to read "${fileName}" (${fileReadingSentences.length} sentences)`);
+
+        readNextSentence(fileName);
+    }
+
+    function readNextSentence(fileName) {
+        if (!isReading) {
+            return;
+        }
+
+        if (isPaused) {
+            updateReadingStatus(`Paused - "${fileName}" (${currentSentenceIndex}/${fileReadingSentences.length} sentences)`);
+            return;
+        }
+
+        if (currentSentenceIndex >= fileReadingSentences.length) {
+            finishReading(fileName);
+            return;
+        }
+
+        const sentence = fileReadingSentences[currentSentenceIndex].trim();
+        if (sentence.length === 0) {
+            currentSentenceIndex++;
+            setTimeout(() => readNextSentence(fileName), 100);
+            return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(sentence);
+        utterance.rate = parseFloat(speedRange.value) || 1.0;
+        utterance.lang = 'en-US';
+
+        utterance.onstart = () => {
+            updateProgress((currentSentenceIndex / fileReadingSentences.length) * 100);
+            updateReadingStatus(`Reading "${fileName}" (${currentSentenceIndex + 1}/${fileReadingSentences.length} sentences)`);
+        };
+
+        utterance.onend = () => {
+            if (!isReading) return;
+            
+            currentSentenceIndex++;
+            updateProgress((currentSentenceIndex / fileReadingSentences.length) * 100);
+            
+            // Add a small delay between sentences to allow for pausing
+            readingTimeout = setTimeout(() => {
+                readNextSentence(fileName);
+            }, 500);
+        };
+
+        utterance.onerror = (event) => {
+            console.error('Speech error:', event.error);
+            showFileStatus(`Speech error: ${event.error}. Reading stopped.`, 'danger');
+            stopReading();
+        };
+
+        currentUtterance = utterance;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function pauseReading() {
+        if (!isReading) return;
+        
+        isPaused = true;
+        
+        // Cancel current utterance
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        
+        // Clear any pending timeouts
+        if (readingTimeout) {
+            clearTimeout(readingTimeout);
+            readingTimeout = null;
+        }
+        
+        // Update UI
+        showPauseResumeButtons(false); // Show resume button
+        updateReadingStatus(`Paused at sentence ${currentSentenceIndex + 1}/${fileReadingSentences.length}`);
+        showFileStatus('Reading paused', 'warning');
+    }
+
+    function resumeReading() {
+        if (!isReading || !isPaused) return;
+        
+        isPaused = false;
+        showPauseResumeButtons(true); // Show pause button
+        showFileStatus('Resuming reading...', 'info');
+        
+        // Continue from current sentence
+        const fileName = 'Uploaded File'; // You might want to store this
+        readNextSentence(fileName);
+    }
+
+    function stopReading() {
+        isReading = false;
+        isPaused = false;
+        
+        // Clear any pending timeouts
+        if (readingTimeout) {
+            clearTimeout(readingTimeout);
+            readingTimeout = null;
+        }
+        
+        // Cancel speech synthesis
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+
+        // Reset variables
+        currentUtterance = null;
+        fileReadingSentences = [];
+        currentSentenceIndex = 0;
+        
+        // Update UI
+        showReadingControls(false);
+        hideReadingProgress();
+        showFileStatus('Reading stopped', 'info');
+    }
+
+    function finishReading(fileName) {
+        isReading = false;
+        isPaused = false;
+        currentUtterance = null;
+        
+        // Clear timeouts
+        if (readingTimeout) {
+            clearTimeout(readingTimeout);
+            readingTimeout = null;
+        }
+        
+        showReadingControls(false);
+        updateProgress(100);
+        updateReadingStatus('Reading completed!');
+        
+        setTimeout(() => {
+            hideReadingProgress();
+            showFileStatus(`Successfully finished reading "${fileName}"`, 'success');
+        }, 2000);
+    }
+
+    function showFileStatus(message, type) {
+        if (fileStatus) {
+            fileStatus.textContent = message;
+            fileStatus.className = `alert alert-${type}`;
+            fileStatus.classList.remove('d-none');
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    fileStatus.classList.add('d-none');
+                }, 5000);
+            }
+        }
+    }
+
+    function showReadingProgress() {
+        if (readingProgress) {
+            readingProgress.classList.remove('d-none');
+            updateProgress(0);
+        }
+    }
+
+    function hideReadingProgress() {
+        if (readingProgress) {
+            readingProgress.classList.add('d-none');
+        }
+    }
+
+    function updateProgress(percentage) {
+        if (progressBar) {
+            progressBar.style.width = `${percentage}%`;
+        }
+    }
+
+    function updateReadingStatus(status) {
+        if (readingStatus) {
+            readingStatus.textContent = status;
+        }
+    }
+
+    function showStopButton(show) {
+        if (stopReadingBtn && uploadBtn) {
+            if (show) {
+                stopReadingBtn.classList.remove('d-none');
+                uploadBtn.classList.add('d-none');
+            } else {
+                stopReadingBtn.classList.add('d-none');
+                uploadBtn.classList.remove('d-none');
+            }
+        }
+    }
+
+    function showReadingControls(show) {
+        if (readingControls && uploadBtn) {
+            if (show) {
+                readingControls.classList.remove('d-none');
+                uploadBtn.classList.add('d-none');
+                showPauseResumeButtons(true); // Show pause initially
+            } else {
+                readingControls.classList.add('d-none');
+                uploadBtn.classList.remove('d-none');
+            }
+        }
+    }
+
+    function showPauseResumeButtons(showPause) {
+        if (pauseReadingBtn && resumeReadingBtn) {
+            if (showPause) {
+                pauseReadingBtn.classList.remove('d-none');
+                resumeReadingBtn.classList.add('d-none');
+            } else {
+                pauseReadingBtn.classList.add('d-none');
+                resumeReadingBtn.classList.remove('d-none');
+            }
+        }
+    }
+});
+
+// Global function for drag and drop
+function handleFileDrop(event, element) {
+    event.preventDefault();
+    element.style.borderColor = '#dee2e6';
+    element.style.backgroundColor = 'transparent';
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) {
+            fileInput.files = files;
+            // Trigger file upload
+            const uploadBtn = document.getElementById('upload-btn');
+            if (uploadBtn) {
+                uploadBtn.click();
+            }
+        }
+    }
+}
+{% endif %}
+
+// Upgrade to Premium buttons
+document.querySelectorAll('.btn-warning').forEach(button => {
+    if (button.textContent.includes('Upgrade')) {
+        button.addEventListener('click', function() {
+            alert('Premium upgrade feature coming soon!');
+        });
+    }
+});
+</script>
+{% endblock %}

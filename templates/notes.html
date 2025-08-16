@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Notes - NoteBazar{% endblock %}
+
+{% block content %}
+<div class="notes-page">
+    <!-- Header Section -->
+    <section class="notes-header">
+        <div class="section-container">
+            <div class="notes-header-content">
+                <div class="notes-header-text">
+                    <h1 class="page-title">Discover Amazing Notes</h1>
+                    <p class="page-subtitle">Explore thousands of high-quality notes from students and educators worldwide</p>
+                </div>
+                <div class="notes-header-actions">
+                    {% if session.user_id %}
+                        <a href="{{ url_for('upload_note') }}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i>
+                            Upload Your Notes
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters Section -->
+    <section class="notes-filters">
+        <div class="section-container">
+            <div class="filters-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search notes..." class="search-input">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="subjectFilter">Subject:</label>
+                    <select id="subjectFilter" class="filter-select" onchange="filterBySubject(this.value)">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject }}" {% if selected_subject == subject %}selected{% endif %}>
+                                {{ subject }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="priceFilter">Price:</label>
+                    <select id="priceFilter" class="filter-select">
+                        <option value="">All</option>
+                        <option value="free">Free Only</option>
+                        <option value="paid">Paid Only</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sortBy">Sort By:</label>
+                    <select id="sortBy" class="filter-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="downloads">Most Downloads</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notes Grid -->
+    <section class="notes-section">
+        <div class="section-container">
+            {% if notes.items %}
+                <div class="notes-grid">
+                    {% for note in notes.items %}
+                        <div class="note-card" data-subject="{{ note.subject.lower() }}" data-price="{{ 'free' if note.price == 0 else 'paid' }}">
+                            <div class="note-header">
+                                <div class="note-meta">
+                                    <span class="note-subject">{{ note.subject }}</span>
+                                    {% if note.price == 0 %}
+                                        <span class="note-price free">Free</span>
+                                    {% else %}
+                                        <span class="note-price paid">{{ note.price }} coins</span>
+                                    {% endif %}
+                                </div>
+                                <div class="note-stats">
+                                    <span class="stat" title="Views">
+                                        <i class="fas fa-eye"></i>
+                                        {{ note.views }}
+                                    </span>
+                                    <span class="stat" title="Downloads">
+                                        <i class="fas fa-download"></i>
+                                        {{ note.downloads }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="note-content">
+                                <h3 class="note-title">{{ note.title }}</h3>
+                                <p class="note-description">
+                                    {{ note.description[:150] }}{% if note.description|length > 150 %}...{% endif %}
+                                </p>
+                                
+                                <div class="note-footer">
+                                    <div class="note-author">
+                                        <i class="fas fa-user-circle"></i>
+                                        <span>{{ note.uploader.username }}</span>
+                                    </div>
+                                    <div class="note-date">
+                                        {{ note.created_at.strftime('%b %d, %Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="note-actions">
+                                <a href="{{ url_for('view_note', note_id=note.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                    View Details
+                                </a>
+                                
+                                {% if note.price == 0 %}
+                                    <a href="{{ url_for('download_note', note_id=note.id) }}" class="btn btn-success btn-sm">
+                                        <i class="fas fa-download"></i>
+                                        Download
+                                    </a>
+                                {% elif session.user_id and note.uploader_id != session.user_id %}
+                                    <button onclick="purchaseNote('{{ note.id }}')" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        Purchase
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if notes.pages > 1 %}
+                    <div class="pagination">
+                        {% if notes.has_prev %}
+                            <a href="{{ url_for('notes', page=notes.prev_num, subject=selected_subject) }}" class="pagination-btn">
+                                <i class="fas fa-chevron-left"></i>
+                                Previous
+                            </a>
+                        {% endif %}
+                        
+                        <div class="pagination-numbers">
+                            {% for page_num in notes.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != notes.page %}
+                                        <a href="{{ url_for('notes', page=page_num, subject=selected_subject) }}" class="pagination-number">
+                                            {{ page_num }}
+                                        </a>
+                                    {% else %}
+                                        <span class="pagination-number active">{{ page_num }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="pagination-dots">…</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        {% if notes.has_next %}
+                            <a href="{{ url_for('notes', page=notes.next_num, subject=selected_subject) }}" class="pagination-btn">
+                                Next
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3>No Notes Found</h3>
+                    <p>No notes match your current filters. Try adjusting your search criteria.</p>
+                    {% if session.user_id %}
+                        <a href="{{ url_for('upload_note') }}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i>
+                            Upload First Note
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<style>
+.notes-page {
+    padding-top: var(--space-xl);
+}
+
+.notes-header {
+    background: var(--bg-secondary);
+    padding: var(--space-3xl) 0;
+}
+
+.notes-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-xl);
+}
+
+.page-title {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--space-md);
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+    margin: 0;
+}
+
+.notes-filters {
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border);
+    padding: var(--space-xl) 0;
+}
+
+.filters-container {
+    display: flex;
+    gap: var(--space-lg);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 300px;
+}
+
+.search-box i {
+    position: absolute;
+    left: var(--space-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+}
+
+.search-input {
+    width: 100%;
+    padding: var(--space-md) var(--space-md) var(--space-md) var(--space-3xl);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    font-size: var(--font-size-base);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.filter-select {
+    min-width: 120px;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+}
+
+.notes-section {
+    padding: var(--space-3xl) 0;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-3xl);
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.pagination-btn:hover {
+    background: var(--bg-secondary);
+    transform: translateY(-2px);
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.pagination-number {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.pagination-number:hover {
+    background: var(--bg-secondary);
+}
+
+.pagination-number.active {
+    background: var(--primary);
+    border-color: transparent;
+    color: white;
+}
+
+.pagination-dots {
+    padding: var(--space-md);
+    color: var(--text-tertiary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--space-3xl);
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--space-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-2xl);
+    color: var(--text-tertiary);
+}
+
+.empty-state h3 {
+    margin-bottom: var(--space-md);
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xl);
+}
+
+@media (max-width: 768px) {
+    .notes-header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .filters-container {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+    
+    .search-box {
+        min-width: unset;
+        width: 100%;
+    }
+    
+    .filter-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .filter-select {
+        min-width: 150px;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+    }
+    
+    .pagination-numbers {
+        order: 1;
+        width: 100%;
+        justify-content: center;
+        margin: var(--space-md) 0;
+    }
+}
+</style>
+
+<script>
+function filterBySubject(subject) {
+    const url = new URL(window.location);
+    if (subject) {
+        url.searchParams.set('subject', subject);
+    } else {
+        url.searchParams.delete('subject');
+    }
+    url.searchParams.delete('page'); // Reset to first page
+    window.location.href = url.toString();
+}
+
+// Live search functionality
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const noteCards = document.querySelectorAll('.note-card');
+    
+    noteCards.forEach(card => {
+        const title = card.querySelector('.note-title').textContent.toLowerCase();
+        const description = card.querySelector('.note-description').textContent.toLowerCase();
+        const subject = card.querySelector('.note-subject').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || description.includes(searchTerm) || subject.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+// Price filter functionality
+document.getElementById('priceFilter').addEventListener('change', function(e) {
+    const priceFilter = e.target.value;
+    const noteCards = document.querySelectorAll('.note-card');
+    
+    noteCards.forEach(card => {
+        if (priceFilter === '') {
+            card.style.display = 'block';
+        } else {
+            const cardPrice = card.dataset.price;
+            if (priceFilter === cardPrice) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

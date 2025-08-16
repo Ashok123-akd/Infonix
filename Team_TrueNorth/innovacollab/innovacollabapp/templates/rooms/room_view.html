@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ room.title }} - Learning Room{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <!-- Room Header -->
+        <div class="row mb-5">
+            <div class="col-lg-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <h1 class="h2 text-primary mb-2">{{ room.title }}</h1>
+                                <p class="text-muted mb-3">{{ room.description|truncatewords:20 }}</p>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-primary me-2">{{ room.get_category_display }}</span>
+                                    <span class="badge bg-info me-2">{{ room.get_difficulty_level_display }}</span>
+                                    {% if is_premium %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-star-fill"></i> Premium Member
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-person"></i> Free Member
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-lg-4 text-lg-end">
+                                {% if room.room_image %}
+                                    <img src="{{ room.room_image.url }}" alt="{{ room.title }}" 
+                                         class="img-fluid rounded" style="max-height: 150px;">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-lg-8">
+                <!-- Navigation Tabs -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <ul class="nav nav-tabs card-header-tabs" id="roomTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="materials-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#materials" type="button" role="tab">
+                                    <i class="bi bi-book me-2"></i>Study Materials
+                                </button>
+                            </li>
+                            {% if is_premium %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="chatbot-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#chatbot" type="button" role="tab">
+                                    <i class="bi bi-robot me-2"></i>AI Assistant
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tts-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#tts" type="button" role="tab">
+                                    <i class="bi bi-volume-up me-2"></i>Text-to-Speech
+                                </button>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content" id="roomTabsContent">
+                            <!-- Study Materials Tab -->
+                            <div class="tab-pane fade show active" id="materials" role="tabpanel">
+                                <h5 class="mb-3">Course Study Materials</h5>
+                                <div class="list-group">
+                                    <!-- Sample Study Material 1 -->
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-file-text text-primary me-2"></i>Chapter 1: Introduction to {{ room.title }}
+                                                </h6>
+                                                <p class="mb-1 text-muted">Essential reading material for getting started</p>
+                                                <small class="text-muted">PDF • 15 pages</small>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-outline-primary btn-sm me-2">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </button>
+                                                {% if is_premium %}
+                                                <button class="btn btn-success btn-sm">
+                                                    <i class="bi bi-download me-1"></i>Download
+                                                </button>
+                                                {% else %}
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i class="bi bi-lock me-1"></i>Download
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Sample Study Material 2 -->
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-file-text text-primary me-2"></i>Chapter 2: Core Concepts
+                                                </h6>
+                                                <p class="mb-1 text-muted">Deep dive into fundamental concepts</p>
+                                                <small class="text-muted">PDF • 22 pages</small>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-outline-primary btn-sm me-2">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </button>
+                                                {% if is_premium %}
+                                                <button class="btn btn-success btn-sm">
+                                                    <i class="bi bi-download me-1"></i>Download
+                                                </button>
+                                                {% else %}
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i class="bi bi-lock me-1"></i>Download
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sample Study Material 3 -->
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <i class="bi bi-file-text text-primary me-2"></i>Chapter 3: Advanced Topics
+                                                </h6>
+                                                <p class="mb-1 text-muted">Advanced concepts and practical applications</p>
+                                                <small class="text-muted">PDF • 28 pages</small>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-outline-primary btn-sm me-2">
+                                                    <i class="bi bi-eye me-1"></i>View
+                                                </button>
+                                                {% if is_premium %}
+                                                <button class="btn btn-success btn-sm">
+                                                    <i class="bi bi-download me-1"></i>Download
+                                                </button>
+                                                {% else %}
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i class="bi bi-lock me-1"></i>Download
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {% if not is_premium %}
+                                    <div class="list-group-item bg-light">
+                                        <div class="text-center py-3">
+                                            <i class="bi bi-star text-warning fs-1 mb-2"></i>
+                                            <h6 class="text-muted">Upgrade to Premium</h6>
+                                            <p class="text-muted small mb-3">Download materials for offline access and get more exclusive content</p>
+                                            <button class="btn btn-warning">
+                                                <i class="bi bi-star me-1"></i>Upgrade Now
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if is_premium %}
+                            <!-- AI Chatbot Tab (Premium Only) -->
+                            <div class="tab-pane fade" id="chatbot" role="tabpanel">
+                                <h5 class="mb-3">AI Assistant</h5>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-robot me-2"></i>
+                                    <strong>Premium Feature:</strong> Get instant help with our AI-powered assistant
+                                </div>
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <div class="mb-4">
+                                            <i class="bi bi-robot text-primary" style="font-size: 3rem;"></i>
+                                        </div>
+                                        <h6 class="mb-3">AI Course Assistant</h6>
+                                        <p class="text-muted mb-4">Ask questions about the course content, get explanations, and receive personalized help.</p>
+                                        <a href="{% url 'chatbot' room.id %}" class="btn btn-primary btn-lg">
+                                            <i class="bi bi-chat-dots me-2"></i>Start Chatting
+                                        </a>
+                                        <div class="mt-3">
+                                            <small class="text-muted">Available 24/7 • Powered by AI</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Text-to-Speech Tab (Premium Only) -->
+                            <div class="tab-pane fade" id="tts" role="tabpanel">
+                                <h5 class="mb-3">Text-to-Speech</h5>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-volume-up me-2"></i>
+                                    <strong>Premium Feature:</strong> Listen to course materials with voice synthesis
+                                </div>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="mb-3">Audio Learning Experience</h6>
+                                        <p class="text-muted mb-4">Convert any study material to audio and listen while multitasking or on the go.</p>
+                                        
+                                        <!-- Sample TTS Content -->
+                                        <div class="border rounded p-3 mb-3 bg-light">
+                                            <h6 class="mb-2">Sample Content</h6>
+                                            <p class="mb-3 small">{{ room.description|truncatewords:30 }}</p>
+                                            <div class="d-flex align-items-center">
+                                                <button class="btn btn-success btn-sm me-2" id="playTTS">
+                                                    <i class="bi bi-play-fill me-1"></i>Play
+                                                </button>
+                                                <button class="btn btn-outline-secondary btn-sm me-2" id="pauseTTS" disabled>
+                                                    <i class="bi bi-pause-fill me-1"></i>Pause
+                                                </button>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <small class="text-muted">Voice Speed:</small>
+                                                    <input type="range" class="form-range" id="speedRange" min="0.5" max="2" step="0.1" value="1">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-center">
+                                            <small class="text-muted">Select any study material above to enable text-to-speech</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Feature Summary -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">Your Access Level</h6>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="text-success mb-3">Free Features</h6>
+                        {% for feature in free_features %}
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="{{ feature.icon }} text-success me-2"></i>
+                            <span class="small">{{ feature.name }}</span>
+                            <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                        </div>
+                        <small class="text-muted d-block">{{ feature.description }}</small>
+                        {% endfor %}
+
+                        <hr>
+                        <h6 class="{% if is_premium %}text-warning{% else %}text-muted{% endif %} mb-3">
+                            Premium Features
+                            {% if is_premium %}
+                                <span class="badge bg-warning text-dark ms-2">Active</span>
+                            {% endif %}
+                        </h6>
+                        {% for feature in premium_features %}
+                        <div class="d-flex align-items-center mb-2 {% if not feature.available %}opacity-50{% endif %}">
+                            <i class="{{ feature.icon }} {% if feature.available %}text-warning{% else %}text-muted{% endif %} me-2"></i>
+                            <span class="small">{{ feature.name }}</span>
+                            {% if feature.available %}
+                                <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+                            {% else %}
+                                <i class="bi bi-lock text-muted ms-auto"></i>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted d-block mb-2">{{ feature.description }}</small>
+                        {% endfor %}
+
+                        {% if not is_premium %}
+                        <div class="text-center mt-3">
+                            <button class="btn btn-warning w-100">
+                                <i class="bi bi-star me-2"></i>Upgrade to Premium
+                            </button>
+                            <small class="text-muted d-block mt-2">Unlock all premium features</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="mb-3">Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'room_detail' room.id %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Room Details
+                            </a>
+                            {% if is_premium %}
+                            <button class="btn btn-success" onclick="alert('Support feature coming soon!')">
+                                <i class="bi bi-headset me-2"></i>Premium Support
+                            </button>
+                            {% else %}
+                            <button class="btn btn-outline-secondary" onclick="alert('Support feature coming soon!')">
+                                <i class="bi bi-chat-dots me-2"></i>Basic Support
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message Modal (if any) -->
+{% if messages %}
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mb-0">{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+// Show message modal if there are messages
+document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+    var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+    messageModal.show();
+    {% endif %}
+});
+
+// Text-to-Speech functionality (Premium feature)
+{% if is_premium %}
+document.addEventListener('DOMContentLoaded', function() {
+    const playBtn = document.getElementById('playTTS');
+    const pauseBtn = document.getElementById('pauseTTS');
+    const speedRange = document.getElementById('speedRange');
+    let utterance = null;
+
+    if (playBtn) {
+        playBtn.addEventListener('click', function() {
+            const text = "{{ room.description|truncatewords:30|escapejs }}";
+            utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = parseFloat(speedRange.value);
+            
+            speechSynthesis.speak(utterance);
+            playBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            utterance.onend = function() {
+                playBtn.disabled = false;
+                pauseBtn.disabled = true;
+            };
+        });
+    }
+
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', function() {
+            speechSynthesis.cancel();
+            playBtn.disabled = false;
+            pauseBtn.disabled = true;
+        });
+    }
+
+    if (speedRange) {
+        speedRange.addEventListener('input', function() {
+            if (utterance) {
+                utterance.rate = parseFloat(this.value);
+            }
+        });
+    }
+});
+{% endif %}
+
+// Upgrade to Premium buttons
+document.querySelectorAll('.btn-warning').forEach(button => {
+    if (button.textContent.includes('Upgrade')) {
+        button.addEventListener('click', function() {
+            alert('Premium upgrade feature coming soon!');
+        });
+    }
+});
+</script>
+{% endblock %}
