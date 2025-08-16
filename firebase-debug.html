@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Debug - Studymate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <h1>Firebase Authentication Debug</h1>
+    
+    <div class="debug-section">
+        <h2>1. Firebase Initialization Status</h2>
+        <div id="firebaseStatus" class="status">Checking...</div>
+        <button onclick="checkFirebaseStatus()">Check Status</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. Authentication Test</h2>
+        <div>
+            <input type="email" id="testEmail" placeholder="Email" value="test@example.com">
+            <input type="password" id="testPassword" placeholder="Password" value="password123">
+            <button onclick="testEmailSignup()">Test Email Signup</button>
+            <button onclick="testEmailLogin()">Test Email Login</button>
+            <button onclick="testGoogleSignIn()">Test Google Sign-in</button>
+            <button onclick="testSignOut()">Sign Out</button>
+        </div>
+        <div id="authStatus" class="status">Ready to test</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. Current User Status</h2>
+        <div id="userStatus" class="status">Checking...</div>
+        <button onclick="checkCurrentUser()">Check Current User</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. Console Log</h2>
+        <div id="consoleLog" class="log"></div>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+    
+    <script>
+        // Override console.log to capture logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logDiv = document.getElementById('consoleLog');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logDiv.textContent += 'LOG: ' + args.join(' ') + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logDiv.textContent += 'ERROR: ' + args.join(' ') + '\n';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+        
+        function clearLog() {
+            logDiv.textContent = '';
+        }
+        
+        function checkFirebaseStatus() {
+            const statusDiv = document.getElementById('firebaseStatus');
+            try {
+                if (typeof firebase !== 'undefined') {
+                    if (firebase.apps && firebase.apps.length > 0) {
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = '✅ Firebase is initialized and ready';
+                        console.log('Firebase config:', firebase.app().options);
+                    } else {
+                        statusDiv.className = 'status error';
+                        statusDiv.textContent = '❌ Firebase is loaded but not initialized';
+                    }
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Firebase is not loaded';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Error checking Firebase: ' + error.message;
+            }
+        }
+        
+        function checkCurrentUser() {
+            const statusDiv = document.getElementById('userStatus');
+            try {
+                if (firebase.auth().currentUser) {
+                    const user = firebase.auth().currentUser;
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `
+                        ✅ User is signed in:<br>
+                        Email: ${user.email}<br>
+                        UID: ${user.uid}<br>
+                        Display Name: ${user.displayName || 'Not set'}
+                    `;
+                } else {
+                    statusDiv.className = 'status warning';
+                    statusDiv.textContent = '⚠️ No user is currently signed in';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Error checking user: ' + error.message;
+            }
+        }
+        
+        async function testEmailSignup() {
+            const statusDiv = document.getElementById('authStatus');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            try {
+                statusDiv.className = 'status warning';
+                statusDiv.textContent = 'Creating account...';
+                
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `✅ Account created successfully! UID: ${user.uid}`;
+                
+                // Update user profile
+                await user.updateProfile({
+                    displayName: 'Test User'
+                });
+                
+                console.log('User profile updated');
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Signup failed: ${error.message}`;
+                console.error('Signup error:', error);
+            }
+        }
+        
+        async function testEmailLogin() {
+            const statusDiv = document.getElementById('authStatus');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            try {
+                statusDiv.className = 'status warning';
+                statusDiv.textContent = 'Signing in...';
+                
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `✅ Login successful! Welcome ${user.email}`;
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Login failed: ${error.message}`;
+                console.error('Login error:', error);
+            }
+        }
+        
+        async function testGoogleSignIn() {
+            const statusDiv = document.getElementById('authStatus');
+            
+            try {
+                statusDiv.className = 'status warning';
+                statusDiv.textContent = 'Starting Google sign-in...';
+                
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await firebase.auth().signInWithPopup(provider);
+                const user = result.user;
+                
+                statusDiv.className = 'status success';
+                statusDiv.textContent = `✅ Google sign-in successful! Welcome ${user.email}`;
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Google sign-in failed: ${error.message}`;
+                console.error('Google sign-in error:', error);
+            }
+        }
+        
+        async function testSignOut() {
+            const statusDiv = document.getElementById('authStatus');
+            
+            try {
+                await firebase.auth().signOut();
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Signed out successfully';
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Sign out failed: ${error.message}`;
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Firebase Debug page loaded');
+            checkFirebaseStatus();
+            checkCurrentUser();
+            
+            // Listen for auth state changes
+            firebase.auth().onAuthStateChanged(function(user) {
+                console.log('Auth state changed:', user ? user.email : 'No user');
+                checkCurrentUser();
+            });
+        });
+    </script>
+</body>
+</html>

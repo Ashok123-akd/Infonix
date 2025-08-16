@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Studymate</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Simple loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        /* Auth error */
+        .auth-error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .auth-error h2 {
+            color: #e53e3e;
+            margin-bottom: 1rem;
+        }
+        
+        .auth-error p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+        }
+        
+        .auth-error .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-error .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Hide main content initially */
+        .main-content {
+            display: none;
+        }
+
+        /* --- Added: user menu dropdown + modal styles --- */
+        .user-menu { position: relative; cursor: pointer; }
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            min-width: 180px;
+            overflow: hidden;
+            z-index: 2000;
+        }
+        .user-dropdown.show { display: block; }
+        .user-dropdown a { display: block; padding: 10px 14px; color: #333; text-decoration: none; font-size: 14px; }
+        .user-dropdown a:hover { background: #f3f4f6; }
+
+        /* Simple modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+        .modal-backdrop.show { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 12px;
+            padding: 18px;
+            width: 420px;
+            max-width: calc(100% - 40px);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+        }
+        .modal h3 { margin-top: 0; margin-bottom: 8px; }
+        .modal .form-row { margin-bottom: 12px; }
+        .modal input[type="text"], .modal input[type="url"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .modal .modal-actions { text-align: right; margin-top: 12px; }
+        .btn-primary {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: transparent;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Dashboard...</div>
+    </div>
+    
+    <!-- Authentication Error -->
+    <div id="authError" class="auth-error">
+        <h2><i class="fas fa-exclamation-triangle"></i> Authentication Required</h2>
+        <p>You need to be logged in to access the dashboard.</p>
+        <a href="login.html" class="btn">Go to Login</a>
+    </div>
+
+    <!-- Added: Edit Profile Modal -->
+    <div id="editProfileModalBackdrop" class="modal-backdrop" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
+            <h3 id="editProfileTitle">Edit Profile</h3>
+            <div class="form-row">
+                <label for="editDisplayName">Display name</label>
+                <input id="editDisplayName" type="text" placeholder="Your display name">
+            </div>
+            <div class="form-row">
+                <label for="editPhotoURL">Photo URL</label>
+                <input id="editPhotoURL" type="url" placeholder="https://...">
+            </div>
+            <div class="modal-actions">
+                <button id="editProfileCancel" class="btn-secondary">Cancel</button>
+                <button id="editProfileSave" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Added: Settings Modal -->
+    <div id="settingsModalBackdrop" class="modal-backdrop" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <h3 id="settingsTitle">Settings</h3>
+            <div class="form-row">
+                <label><input id="settingNotifications" type="checkbox"> Enable notifications</label>
+            </div>
+            <div class="form-row">
+                <label><input id="settingDarkMode" type="checkbox"> Dark mode (preview)</label>
+            </div>
+            <div class="modal-actions">
+                <button id="settingsClose" class="btn-secondary">Close</button>
+                <button id="settingsSave" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden initially) -->
+    <div id="mainContent" class="main-content">
+        <div id="top"></div>
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <img src="logo.jpg" alt="Studymate Logo" class="logo" onclick="window.location.href='dashboard-simple.html'">
+                    <span class="brand-name">Studymate</span>
+                </div>
+                
+                <div class="nav-menu" id="navMenu">
+                    <a href="#top" class="nav-link active">Home</a>
+                    <a href="events.html" class="nav-link">Events</a>
+                    <a href="resources.html" class="nav-link">Resources</a>
+                    <a href="groups.html" class="nav-link">Groups</a>
+                </div>
+                
+                <div class="nav-user">
+                    <div class="user-menu">
+                        <img src="https://via.placeholder.com/40" alt="User Avatar" class="user-avatar" id="userAvatar">
+                        <span class="user-name" id="userName">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                        
+                        <div class="user-dropdown">
+                            <a href="#" id="editProfile"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                            <a href="#" id="openSettings"><i class="fas fa-cog"></i> Settings</a>
+                            <a href="login.html" id="logout" onclick="logout()">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hamburger Menu for Mobile -->
+                <div class="hamburger" id="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Network Status Indicator -->
+        <div class="network-status" id="networkStatus">
+            <i class="fas fa-wifi"></i>
+            <span id="networkStatusText">Checking connection...</span>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3>Quick Actions</h3>
+                    <div class="quick-actions">
+                        <ul>
+                            <li><a href="resources.html"><i class="fas fa-upload"></i> Upload Resource</a></li>
+                            <li><a href="events.html"><i class="fas fa-calendar-plus"></i> Create Event</a></li>
+                            <li><a href="groups.html"><i class="fas fa-users"></i> Create Group</a></li>
+                            <li><a href="resources.html"><i class="fas fa-search"></i> Search Resources</a></li>
+                            <li><a href="contact.html"><i class="fas fa-envelope"></i> Contact Support</a></li>
+                            <li><a href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-content">
+                <!-- Dashboard Header -->
+                <div class="dashboard-header">
+                    <h1>Welcome back, <span id="dashboardUserName">User</span>!</h1>
+                    <p>Here's what's happening with your studies today</p>
+                </div>
+
+                <!-- Search Section -->
+                <div class="search-section">
+                    <h2><i class="fas fa-search"></i> Find Users</h2>
+                    <div class="search-container">
+                        <input type="text" id="userSearchInput" placeholder="Search by name, email, or field of study..." class="search-input">
+                        <button onclick="searchUsers()" class="search-btn">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <div id="searchResults" class="search-results"></div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Statistics Cards -->
+                    <div class="stats-section">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="totalFriends">0</h3>
+                                <p>Friends</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="totalEvents">0</h3>
+                                <p>Events</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="totalResources">0</h3>
+                                <p>Resources</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="totalGroups">0</h3>
+                                <p>Study Groups</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar Section -->
+                    <div class="calendar-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Upcoming Events</h2>
+                            <div class="calendar-nav">
+                                <button onclick="previousMonth()" class="calendar-nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="calendarMonth">January 2025</span>
+                                <button onclick="nextMonth()" class="calendar-nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calendar-container">
+                            <div id="calendarGrid" class="calendar-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Friends Section -->
+                    <div class="friends-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-user-friends"></i> Friends</h2>
+                            <div class="friends-tabs">
+                                <button class="friends-tab-btn active" onclick="showFriendsTab('friends')">Friends</button>
+                                <button class="friends-tab-btn" onclick="showFriendsTab('requests')">Requests</button>
+                                <button class="friends-tab-btn" onclick="showFriendsTab('suggestions')">Suggestions</button>
+                            </div>
+                        </div>
+                        <div class="friends-content">
+                            <div id="friends" class="friends-tab-content active">
+                                <div id="friendsList"></div>
+                            </div>
+                            <div id="requests" class="friends-tab-content">
+                                <div id="friendRequestsList"></div>
+                            </div>
+                            <div id="suggestions" class="friends-tab-content">
+                                <div id="friendSuggestionsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Simple authentication check
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard loaded');
+            
+            // Check if Firebase is available
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase is not loaded!');
+                showAuthError('Firebase is not loaded. Please refresh the page.');
+                return;
+            }
+            
+            // Set up auth listener
+            firebase.auth().onAuthStateChanged(function(user) {
+                console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+                
+                if (user) {
+                    // User is signed in
+                    console.log('User is authenticated:', user.email);
+                    hideLoading();
+                    showDashboard(user);
+                } else {
+                    // User is not signed in
+                    console.log('User is not authenticated');
+                    hideLoading();
+                    showAuthError('You need to be logged in to access the dashboard.');
+                }
+            });
+            
+            // Set a timeout to prevent infinite loading
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen && loadingScreen.style.display !== 'none') {
+                    console.log('Authentication timeout');
+                    hideLoading();
+                    showAuthError('Authentication timeout. Please try again.');
+                }
+            }, 5000);
+
+            // --- Added: setup interactive elements ---
+            setupUserMenuAndModals();
+        });
+        
+        function hideLoading() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
+        }
+        
+        function showAuthError(message) {
+            const authError = document.getElementById('authError');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (authError) {
+                const errorText = authError.querySelector('p');
+                if (errorText) {
+                    errorText.textContent = message;
+                }
+                authError.style.display = 'block';
+            }
+            
+            if (mainContent) {
+                mainContent.style.display = 'none';
+            }
+        }
+        
+        function showDashboard(user) {
+            const authError = document.getElementById('authError');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (authError) {
+                authError.style.display = 'none';
+            }
+            
+            if (mainContent) {
+                mainContent.style.display = 'block';
+            }
+            
+            // Update user info
+            updateUserInfo(user);
+            
+            // Initialize dashboard
+            initializeDashboard();
+        }
+        
+        function updateUserInfo(user) {
+            const userNameElement = document.getElementById('userName');
+            const userAvatarElement = document.getElementById('userAvatar');
+            const dashboardUserName = document.getElementById('dashboardUserName');
+            
+            if (userNameElement) {
+                userNameElement.textContent = user.displayName || user.email.split('@')[0];
+            }
+            
+            if (dashboardUserName) {
+                dashboardUserName.textContent = user.displayName || user.email.split('@')[0];
+            }
+            
+            if (userAvatarElement && user.photoURL) {
+                userAvatarElement.src = user.photoURL;
+            }
+        }
+        
+        function logout() {
+            if (typeof firebase !== 'undefined') {
+                firebase.auth().signOut().then(() => {
+                    console.log('User signed out successfully');
+                    localStorage.clear();
+                    window.location.href = 'login.html';
+                }).catch((error) => {
+                    console.error('Error signing out:', error);
+                    window.location.href = 'login.html';
+                });
+            } else {
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function initializeDashboard() {
+            console.log('Initializing dashboard...');
+            
+            // Load sample data
+            loadSampleData();
+            
+            // Initialize calendar
+            initializeCalendar();
+            
+            // Load friends
+            loadFriends();
+            
+            console.log('Dashboard initialized');
+        }
+        
+        function loadSampleData() {
+            // Sample data
+            const sampleFriends = [
+                { name: 'Alice Brown', field: 'Biology', avatar: 'https://via.placeholder.com/40' },
+                { name: 'Bob Wilson', field: 'Chemistry', avatar: 'https://via.placeholder.com/40' }
+            ];
+            
+            const sampleEvents = [
+                { title: 'Study Group Meeting', date: '2025-01-15', time: '2:00 PM', location: 'Library Room 101' },
+                { title: 'Project Deadline', date: '2025-01-20', time: '11:59 PM', location: 'Online' }
+            ];
+            
+            localStorage.setItem('userFriends', JSON.stringify(sampleFriends));
+            localStorage.setItem('userEvents', JSON.stringify(sampleEvents));
+            
+            // Update statistics
+            document.getElementById('totalFriends').textContent = sampleFriends.length;
+            document.getElementById('totalEvents').textContent = sampleEvents.length;
+            document.getElementById('totalResources').textContent = '5';
+            document.getElementById('totalGroups').textContent = '3';
+        }
+        
+        function initializeCalendar() {
+            generateCalendar();
+        }
+        
+        function generateCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            if (!calendarGrid) return;
+            
+            // Simple calendar generation
+            calendarGrid.innerHTML = '<p>Calendar will be generated here</p>';
+        }
+        
+        function previousMonth() {
+            console.log('Previous month');
+        }
+        
+        function nextMonth() {
+            console.log('Next month');
+        }
+        
+        function loadFriends() {
+            const friends = JSON.parse(localStorage.getItem('userFriends') || '[]');
+            const container = document.getElementById('friendsList');
+            if (!container) return;
+            
+            if (friends.length === 0) {
+                container.innerHTML = '<p>No friends yet</p>';
+                return;
+            }
+            
+            const friendsList = friends.map(friend => `
+                <div class="friend-item">
+                    <img src="${friend.avatar}" alt="${friend.name}" class="friend-avatar">
+                    <div class="friend-info">
+                        <h4>${friend.name}</h4>
+                        <p>${friend.field}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            container.innerHTML = friendsList;
+        }
+        
+        function showFriendsTab(tab) {
+            console.log('Showing friends tab:', tab);
+        }
+        
+        function searchUsers() {
+            const query = document.getElementById('userSearchInput').value;
+            console.log('Searching for:', query);
+            document.getElementById('searchResults').innerHTML = '<p>Search results will appear here</p>';
+        }
+
+        // --- Added: user menu + modal JS ---
+        function setupUserMenuAndModals() {
+            const userMenu = document.querySelector('.user-menu');
+            const userDropdown = document.querySelector('.user-dropdown');
+            const editProfileLink = document.getElementById('editProfile');
+            const openSettingsLink = document.getElementById('openSettings');
+
+            // toggle dropdown on click
+            if (userMenu && userDropdown) {
+                userMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('show');
+                });
+            }
+
+            // close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (userDropdown) userDropdown.classList.remove('show');
+            });
+
+            // Edit profile handlers
+            const editBackdrop = document.getElementById('editProfileModalBackdrop');
+            const editSave = document.getElementById('editProfileSave');
+            const editCancel = document.getElementById('editProfileCancel');
+            const editNameInput = document.getElementById('editDisplayName');
+            const editPhotoInput = document.getElementById('editPhotoURL');
+
+            if (editProfileLink) {
+                editProfileLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // populate current values
+                    const currentName = document.getElementById('userName').textContent || '';
+                    const avatar = document.getElementById('userAvatar').src || '';
+                    editNameInput.value = currentName;
+                    editPhotoInput.value = (avatar && avatar.indexOf('placeholder.com') === -1) ? avatar : '';
+                    openModal(editBackdrop);
+                });
+            }
+
+            if (editCancel) editCancel.addEventListener('click', () => closeModal(editBackdrop));
+            if (editBackdrop) editBackdrop.addEventListener('click', (e) => { if (e.target === editBackdrop) closeModal(editBackdrop); });
+
+            if (editSave) {
+                editSave.addEventListener('click', async () => {
+                    const newName = editNameInput.value.trim();
+                    const newPhoto = editPhotoInput.value.trim();
+                    // Update Firebase profile if available and user is signed in
+                    const user = (typeof firebase !== 'undefined') ? firebase.auth().currentUser : null;
+                    if (user && (newName || newPhoto)) {
+                        try {
+                            await user.updateProfile({ displayName: newName || user.displayName, photoURL: newPhoto || user.photoURL });
+                            console.log('Firebase profile updated');
+                        } catch (err) {
+                            console.warn('Failed to update Firebase profile:', err);
+                        }
+                    }
+                    // Update UI immediately
+                    if (newName) {
+                        const userNameElement = document.getElementById('userName');
+                        const dashboardUserName = document.getElementById('dashboardUserName');
+                        if (userNameElement) userNameElement.textContent = newName;
+                        if (dashboardUserName) dashboardUserName.textContent = newName;
+                    }
+                    if (newPhoto) {
+                        const userAvatar = document.getElementById('userAvatar');
+                        if (userAvatar) userAvatar.src = newPhoto;
+                    }
+                    closeModal(editBackdrop);
+                });
+            }
+
+            // Settings handlers
+            const settingsBackdrop = document.getElementById('settingsModalBackdrop');
+            const settingsClose = document.getElementById('settingsClose');
+            const settingsSave = document.getElementById('settingsSave');
+
+            if (openSettingsLink) {
+                openSettingsLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openModal(settingsBackdrop);
+                });
+            }
+            if (settingsClose) settingsClose.addEventListener('click', () => closeModal(settingsBackdrop));
+            if (settingsBackdrop) settingsBackdrop.addEventListener('click', (e) => { if (e.target === settingsBackdrop) closeModal(settingsBackdrop); });
+            if (settingsSave) settingsSave.addEventListener('click', () => {
+                // persist simple settings in localStorage
+                const notifications = document.getElementById('settingNotifications').checked;
+                const darkMode = document.getElementById('settingDarkMode').checked;
+                localStorage.setItem('sm_settings', JSON.stringify({ notifications, darkMode }));
+                // apply dark mode preview
+                if (darkMode) document.documentElement.style.background = '#0f172a';
+                else document.documentElement.style.background = '';
+                closeModal(settingsBackdrop);
+            });
+
+            // load saved settings
+            try {
+                const saved = JSON.parse(localStorage.getItem('sm_settings') || '{}');
+                if (saved) {
+                    document.getElementById('settingNotifications').checked = !!saved.notifications;
+                    document.getElementById('settingDarkMode').checked = !!saved.darkMode;
+                    if (saved.darkMode) document.documentElement.style.background = '#0f172a';
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        function openModal(backdrop) {
+            if (!backdrop) return;
+            backdrop.classList.add('show');
+            backdrop.setAttribute('aria-hidden', 'false');
+        }
+        function closeModal(backdrop) {
+            if (!backdrop) return;
+            backdrop.classList.remove('show');
+            backdrop.setAttribute('aria-hidden', 'true');
+        }
+    </script>
+</body>
+</html>

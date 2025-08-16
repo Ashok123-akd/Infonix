@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Studymate</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Firebase SDK - Updated to latest version -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Side - Brand */
+        .brand-side {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>') repeat;
+            opacity: 0.1;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            color: white;
+            font-size: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .brand-content h1 {
+            color: white;
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .brand-content p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 400px;
+        }
+
+        .brand-footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 4rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Right Side - Login Form */
+        .login-side {
+            flex: 1;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            position: relative;
+        }
+
+        .login-header {
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: #718096;
+            margin-bottom: 1rem;
+        }
+
+        .login-header a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-header a:hover {
+            text-decoration: underline;
+        }
+
+        .login-form {
+            max-width: 400px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-bottom: 2px solid #e2e8f0;
+            background: transparent;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-bottom-color: #667eea;
+        }
+
+        .form-group input::placeholder {
+            color: #a0aec0;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #2d3748;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .login-btn:hover {
+            background: #1a202c;
+            transform: translateY(-1px);
+        }
+
+        .login-btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .google-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .google-btn:disabled {
+            background: #f7fafc;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.7;
+        }
+
+        .forgot-link {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .forgot-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .forgot-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Alert messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .brand-side {
+                flex: none;
+                height: 40vh;
+                padding: 2rem;
+                text-align: center;
+                align-items: center;
+            }
+            
+            .brand-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .brand-footer {
+                position: static;
+                margin-top: 1rem;
+            }
+            
+            .login-side {
+                flex: 1;
+                padding: 2rem;
+                justify-content: flex-start;
+            }
+            
+            .login-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Side - Brand -->
+        <div class="brand-side">
+            <div class="brand-logo">
+                📚
+            </div>
+            <div class="brand-content">
+                <h1>Hello<br>Studymate!👋</h1>
+                <p>Connect with peers, share resources, and achieve your academic goals together in our collaborative learning platform.</p>
+            </div>
+            <div class="brand-footer">
+                © 2024 Studymate. All rights reserved.
+            </div>
+        </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="login-side">
+            <div class="login-header">
+                <h2>Welcome Back!</h2>
+                <p>Don't have an account? <a href="signup.html">Create a new account now</a>, it's FREE! Takes less than a minute.</p>
+            </div>
+            
+            <form class="login-form" id="loginForm">
+                <div id="alertContainer"></div>
+                
+                <div class="form-group">
+                    <input type="email" id="email" placeholder="Email address" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <span class="btn-text">Login Now</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                
+                <button type="button" class="google-btn" id="googleBtn">
+                    <i class="fab fa-google"></i>
+                    <span class="btn-text">Continue with Google</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                
+                <div class="forgot-link">
+                    Forget password? <a href="#" onclick="showForgotPassword()">Click here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+    
+    <script>
+        // Use the enhanced FirebaseAuth class from firebase-config.js
+        const firebaseAuth = new FirebaseAuth();
+
+        // Form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const spinner = loginBtn.querySelector('.spinner');
+            
+            // Show loading state
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            loginBtn.disabled = true;
+            
+            try {
+                console.log('Attempting email sign-in...');
+                const result = await firebaseAuth.signInWithEmail(email, password);
+                
+                if (result.success) {
+                    console.log('Email sign-in successful, showing success message...');
+                    firebaseAuth.showAlert('Login successful! Redirecting...', 'success');
+                    // Add a small delay to show the success message before redirect
+                    setTimeout(() => {
+                        console.log('Redirecting to dashboard...');
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    console.log('Email sign-in failed:', result.error);
+                    firebaseAuth.showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Unexpected error during sign-in:', error);
+                firebaseAuth.showAlert('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Google sign-in
+        document.getElementById('googleBtn').addEventListener('click', async function() {
+            const googleBtn = this;
+            const btnText = googleBtn.querySelector('.btn-text');
+            const spinner = googleBtn.querySelector('.spinner');
+            
+            // Show loading state
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            googleBtn.disabled = true;
+            
+            try {
+                console.log('Attempting Google sign-in...');
+                const result = await firebaseAuth.signInWithGoogle();
+                
+                if (result.success) {
+                    console.log('Google sign-in successful, showing success message...');
+                    firebaseAuth.showAlert('Google sign-in successful! Redirecting...', 'success');
+                    // Add a small delay to show the success message before redirect
+                    setTimeout(() => {
+                        console.log('Redirecting to dashboard...');
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    console.log('Google sign-in failed:', result.error);
+                    firebaseAuth.showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Unexpected error during Google sign-in:', error);
+                firebaseAuth.showAlert('An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+                googleBtn.disabled = false;
+            }
+        });
+
+        function showForgotPassword() {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                firebaseAuth.showAlert('Please enter your email address first.', 'error');
+                return;
+            }
+            
+            firebaseAuth.resetPassword(email).then(result => {
+                if (result.success) {
+                    firebaseAuth.showAlert('Password reset email sent! Check your inbox.', 'success');
+                } else {
+                    firebaseAuth.showAlert(result.error, 'error');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

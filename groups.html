@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Studymate</title>
+    <!-- Firebase SDK - Updated to latest version -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="top"></div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.jpg" alt="Studymate Logo" class="logo" onclick="window.location.href='dashboard.html'">
+                <span class="brand-name">Studymate</span>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="dashboard.html" class="nav-link">Home</a>
+                <a href="events.html" class="nav-link">Events</a>
+                <a href="resources.html" class="nav-link">Resources</a>
+                <a href="groups.html" class="nav-link active">Groups</a>
+            </div>
+            
+            <div class="nav-user">
+                <div class="user-menu">
+                    <img src="https://via.placeholder.com/40" alt="User Avatar" class="user-avatar">
+                    <span class="user-name">User</span>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown">
+                        <a href="#" id="editProfile"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                        <a href="#" id="openSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="login.html" id="logout" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Groups Header -->
+            <div class="dashboard-header">
+                <h1>Study Groups</h1>
+                <p>Join or create study groups to collaborate with other students</p>
+            </div>
+
+            <!-- Create Group Section -->
+            <div id="create" class="events-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2><i class="fas fa-users"></i> Create New Group</h2>
+                    <button class="btn btn-primary" onclick="showCreateGroupForm()">
+                        <i class="fas fa-plus"></i> Create Group
+                    </button>
+                </div>
+                
+                <!-- Create Group Form (Hidden by default) -->
+                <div id="createGroupForm" class="event-form" style="display: none;">
+                    <form id="newGroupForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="groupName">Group Name *</label>
+                                <input type="text" id="groupName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="groupCategory">Category *</label>
+                                <select id="groupCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="study-group">Study Group</option>
+                                    <option value="project-team">Project Team</option>
+                                    <option value="research">Research Group</option>
+                                    <option value="social">Social Group</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="groupSubject">Subject *</label>
+                                <input type="text" id="groupSubject" required placeholder="e.g., Mathematics, Physics">
+                            </div>
+                            <div class="form-group">
+                                <label for="groupPrivacy">Privacy *</label>
+                                <select id="groupPrivacy" required>
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                    <option value="invite-only">Invite Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="groupDescription">Description *</label>
+                            <textarea id="groupDescription" rows="4" required placeholder="Describe your group's purpose and goals..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="groupTags">Tags</label>
+                            <input type="text" id="groupTags" placeholder="e.g., calculus, exam-prep, beginners (separate with commas)">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="hideCreateGroupForm()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Group</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- My Groups Section -->
+            <div class="events-section">
+                <h2><i class="fas fa-users"></i> My Groups</h2>
+                <div class="events-grid" id="myGroupsGrid">
+                    <!-- My groups will be dynamically loaded -->
+                </div>
+            </div>
+
+            <!-- Discover Groups Section -->
+            <div class="events-section">
+                <h2><i class="fas fa-compass"></i> Discover Groups</h2>
+                <div class="search-container">
+                    <input type="text" id="groupSearchInput" placeholder="Search groups by name, subject, or tags..." class="search-input">
+                    <button onclick="searchGroups()" class="search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                
+                <div class="events-filters">
+                    <button class="filter-btn active" data-filter="all">All Groups</button>
+                    <button class="filter-btn" data-filter="study-group">Study Groups</button>
+                    <button class="filter-btn" data-filter="project-team">Project Teams</button>
+                    <button class="filter-btn" data-filter="research">Research Groups</button>
+                    <button class="filter-btn" data-filter="social">Social Groups</button>
+                </div>
+                
+                <div class="events-grid" id="discoverGroupsGrid">
+                    <!-- Discovered groups will be dynamically loaded -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const storedUser = JSON.parse(localStorage.getItem('studymate_user') || sessionStorage.getItem('studymate_user') || 'null');
+            if (!storedUser) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (window.firebaseAuth) {
+                window.firebaseAuth.signOut().then(() => {
+                    localStorage.removeItem('studymate_user');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                });
+            } else {
+                localStorage.removeItem('studymate_user');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Group form functions
+        function showCreateGroupForm() {
+            document.getElementById('createGroupForm').style.display = 'block';
+        }
+
+        function hideCreateGroupForm() {
+            document.getElementById('createGroupForm').style.display = 'none';
+            document.getElementById('newGroupForm').reset();
+        }
+
+        // Load groups
+        function loadGroups() {
+            loadMyGroups();
+            loadDiscoverGroups();
+        }
+
+        function loadMyGroups() {
+            const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}');
+            const myGroups = groups.filter(group => 
+                group.members && group.members.includes(currentUser.email)
+            );
+            displayMyGroups(myGroups);
+        }
+
+        function loadDiscoverGroups() {
+            const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}');
+            const discoverGroups = groups.filter(group => 
+                group.privacy === 'public' && (!group.members || !group.members.includes(currentUser.email))
+            );
+            displayDiscoverGroups(discoverGroups);
+        }
+
+        function displayMyGroups(groups) {
+            const groupsGrid = document.getElementById('myGroupsGrid');
+            if (!groupsGrid) return;
+
+            groupsGrid.innerHTML = '';
+
+            if (groups.length === 0) {
+                groupsGrid.innerHTML = '<p style="text-align: center; color: #718096;">You haven\'t joined any groups yet. Create one or discover groups below!</p>';
+                return;
+            }
+
+            groups.forEach(group => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'event-card';
+                
+                groupCard.innerHTML = `
+                    <div class="event-date">
+                        <i class="fas fa-users" style="font-size: 2rem; color: white;"></i>
+                    </div>
+                    <div class="event-content">
+                        <h3>${group.name}</h3>
+                        <p>${group.description}</p>
+                        <div class="event-meta">
+                            <span><i class="fas fa-tag"></i> ${group.category}</span>
+                            <span><i class="fas fa-book"></i> ${group.subject}</span>
+                            <span><i class="fas fa-users"></i> ${group.members ? group.members.length : 1} members</span>
+                        </div>
+                        <div class="event-actions">
+                            <button class="btn btn-primary" onclick="openGroup('${group.id}')">
+                                <i class="fas fa-door-open"></i> Open Group
+                            </button>
+                            <button class="btn btn-secondary" onclick="viewGroupDetails('${group.id}')">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                groupsGrid.appendChild(groupCard);
+            });
+        }
+
+        function displayDiscoverGroups(groups) {
+            const groupsGrid = document.getElementById('discoverGroupsGrid');
+            if (!groupsGrid) return;
+
+            groupsGrid.innerHTML = '';
+
+            if (groups.length === 0) {
+                groupsGrid.innerHTML = '<p style="text-align: center; color: #718096;">No groups found. Create the first one!</p>';
+                return;
+            }
+
+            groups.forEach(group => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'event-card';
+                
+                groupCard.innerHTML = `
+                    <div class="event-date">
+                        <i class="fas fa-users" style="font-size: 2rem; color: white;"></i>
+                    </div>
+                    <div class="event-content">
+                        <h3>${group.name}</h3>
+                        <p>${group.description}</p>
+                        <div class="event-meta">
+                            <span><i class="fas fa-tag"></i> ${group.category}</span>
+                            <span><i class="fas fa-book"></i> ${group.subject}</span>
+                            <span><i class="fas fa-users"></i> ${group.members ? group.members.length : 1} members</span>
+                        </div>
+                        <div class="event-actions">
+                            <button class="btn btn-primary" onclick="joinGroup('${group.id}')">
+                                <i class="fas fa-user-plus"></i> Join Group
+                            </button>
+                            <button class="btn btn-secondary" onclick="viewGroupDetails('${group.id}')">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                groupsGrid.appendChild(groupCard);
+            });
+        }
+
+        // Group actions
+        function joinGroup(groupId) {
+            const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+            const group = groups.find(g => g.id == groupId);
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}');
+            
+            if (group) {
+                if (!group.members) {
+                    group.members = [];
+                }
+                if (!group.members.includes(currentUser.email)) {
+                    group.members.push(currentUser.email);
+                    localStorage.setItem('groups', JSON.stringify(groups));
+                    loadGroups();
+                    showNotification('Successfully joined the group!', 'success');
+                } else {
+                    showNotification('You are already a member of this group!', 'info');
+                }
+            }
+        }
+
+        function openGroup(groupId) {
+            showNotification('Group chat and features coming soon!', 'info');
+        }
+
+        function viewGroupDetails(groupId) {
+            const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+            const group = groups.find(g => g.id == groupId);
+            
+            if (group) {
+                alert(`Group Details:\n\nName: ${group.name}\nCategory: ${group.category}\nSubject: ${group.subject}\nDescription: ${group.description}\nPrivacy: ${group.privacy}\nTags: ${group.tags || 'No tags'}\nMembers: ${group.members ? group.members.length : 1}\nCreated by: ${group.createdBy}`);
+            }
+        }
+
+        // Search groups
+        function searchGroups() {
+            const searchInput = document.getElementById('groupSearchInput');
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                loadDiscoverGroups();
+                return;
+            }
+            
+            const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}');
+            const filteredGroups = groups.filter(group => {
+                const searchText = `${group.name} ${group.subject} ${group.description || ''} ${group.tags || ''}`.toLowerCase();
+                return searchText.includes(query.toLowerCase()) && 
+                       group.privacy === 'public' && 
+                       (!group.members || !group.members.includes(currentUser.email));
+            });
+            
+            displayDiscoverGroups(filteredGroups);
+        }
+
+        // Form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadGroups();
+
+            // Handle form submission
+            document.getElementById('newGroupForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}');
+                
+                const newGroup = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('groupName').value,
+                    category: document.getElementById('groupCategory').value,
+                    subject: document.getElementById('groupSubject').value,
+                    privacy: document.getElementById('groupPrivacy').value,
+                    description: document.getElementById('groupDescription').value,
+                    tags: document.getElementById('groupTags').value,
+                    members: [currentUser.email],
+                    createdBy: currentUser.email,
+                    createdAt: new Date().toISOString()
+                };
+
+                // Save to localStorage
+                const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+                groups.push(newGroup);
+                localStorage.setItem('groups', JSON.stringify(groups));
+
+                // Save to Firebase if available
+                if (window.firebaseDB) {
+                    window.firebaseDB.createGroup(newGroup).then(result => {
+                        if (result.success) {
+                            console.log('Group saved to Firebase');
+                        } else {
+                            console.error('Failed to save group:', result.error);
+                        }
+                    });
+                }
+
+                // Reset form and hide
+                hideCreateGroupForm();
+                loadGroups();
+                showNotification('Group created successfully!', 'success');
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    const groups = JSON.parse(localStorage.getItem('groups') || '[]');
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}');
+                    
+                    if (filter === 'all') {
+                        const discoverGroups = groups.filter(group => 
+                            group.privacy === 'public' && (!group.members || !group.members.includes(currentUser.email))
+                        );
+                        displayDiscoverGroups(discoverGroups);
+                    } else {
+                        const filteredGroups = groups.filter(group => 
+                            group.category === filter && 
+                            group.privacy === 'public' && 
+                            (!group.members || !group.members.includes(currentUser.email))
+                        );
+                        displayDiscoverGroups(filteredGroups);
+                    }
+                });
+            });
+        });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close">&times;</button>
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            const closeBtn = notification.querySelector('.notification-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    notification.remove();
+                });
+            }
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

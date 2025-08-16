@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Demo User",
+    "email": "demo@studymate.com",
+    "avatar": "https://via.placeholder.com/40"
+  },
+  {
+    "id": 2,
+    "uid": "EI6sEtacxuefX2ODHEO33uY2OAF2",
+    "name": "Sudarshan Katuwal",
+    "email": "pysike8@gmail.com",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocK3kpKlNRI4EGcmDOqv_LUcQdVX2-XuGhbQHmQlJxP8LXRaxpXZ=s96-c"
+  },
+  {
+    "id": 3,
+    "email": "ak6721818@gmail.com",
+    "avatar": "https://via.placeholder.com/40"
+  }
+]

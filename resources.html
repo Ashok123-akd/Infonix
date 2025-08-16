@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resources - Studymate</title>
+    <!-- Firebase SDK - Updated to latest version -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="top"></div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.jpg" alt="Studymate Logo" class="logo" onclick="window.location.href='dashboard.html'">
+                <span class="brand-name">Studymate</span>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="dashboard.html" class="nav-link">Home</a>
+                <a href="events.html" class="nav-link">Events</a>
+                <a href="resources.html" class="nav-link active">Resources</a>
+                <a href="groups.html" class="nav-link">Groups</a>
+            </div>
+            
+            <div class="nav-user">
+                <div class="user-menu">
+                    <img src="https://via.placeholder.com/40" alt="User Avatar" class="user-avatar">
+                    <span class="user-name">User</span>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown">
+                        <a href="#" id="editProfile"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                        <a href="#" id="openSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="login.html" id="logout" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Resources Header -->
+            <div class="dashboard-header">
+                <h1>Study Resources</h1>
+                <p>Share and discover study materials, notes, and educational content</p>
+            </div>
+
+            <!-- Upload Resource Section -->
+            <div id="upload" class="events-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2><i class="fas fa-upload"></i> Upload Resource</h2>
+                    <button class="btn btn-primary" onclick="showUploadForm()">
+                        <i class="fas fa-plus"></i> Upload Resource
+                    </button>
+                </div>
+                
+                <!-- Upload Form (Hidden by default) -->
+                <div id="uploadForm" class="event-form" style="display: none;">
+                    <form id="newResourceForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="resourceTitle">Resource Title *</label>
+                                <input type="text" id="resourceTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="resourceCategory">Category *</label>
+                                <select id="resourceCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="notes">Study Notes</option>
+                                    <option value="assignments">Assignments</option>
+                                    <option value="presentations">Presentations</option>
+                                    <option value="books">Books & Textbooks</option>
+                                    <option value="videos">Videos</option>
+                                    <option value="quizzes">Quizzes & Tests</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="resourceSubject">Subject *</label>
+                                <input type="text" id="resourceSubject" required placeholder="e.g., Mathematics, Physics">
+                            </div>
+                            <div class="form-group">
+                                <label for="resourceFile">File *</label>
+                                <input type="file" id="resourceFile" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.jpg,.jpeg,.png,.mp4,.mp3" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="resourceDescription">Description</label>
+                            <textarea id="resourceDescription" rows="4" placeholder="Describe your resource..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="resourceTags">Tags</label>
+                            <input type="text" id="resourceTags" placeholder="e.g., calculus, exam-prep, chapter-1 (separate with commas)">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="hideUploadForm()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Upload Resource</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Search Resources Section -->
+            <div id="search" class="events-section">
+                <h2><i class="fas fa-search"></i> Search Resources</h2>
+                <div class="search-container">
+                    <input type="text" id="resourceSearchInput" placeholder="Search by title, subject, or tags..." class="search-input">
+                    <button onclick="searchResources()" class="search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                
+                <div class="events-filters">
+                    <button class="filter-btn active" data-filter="all">All Resources</button>
+                    <button class="filter-btn" data-filter="notes">Notes</button>
+                    <button class="filter-btn" data-filter="assignments">Assignments</button>
+                    <button class="filter-btn" data-filter="presentations">Presentations</button>
+                    <button class="filter-btn" data-filter="books">Books</button>
+                    <button class="filter-btn" data-filter="videos">Videos</button>
+                </div>
+                
+                <div class="events-grid" id="resourcesGrid">
+                    <!-- Resources will be dynamically loaded -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const storedUser = JSON.parse(localStorage.getItem('studymate_user') || sessionStorage.getItem('studymate_user') || 'null');
+            if (!storedUser) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (window.firebaseAuth) {
+                window.firebaseAuth.signOut().then(() => {
+                    localStorage.removeItem('studymate_user');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                });
+            } else {
+                localStorage.removeItem('studymate_user');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Upload form functions
+        function showUploadForm() {
+            document.getElementById('uploadForm').style.display = 'block';
+        }
+
+        function hideUploadForm() {
+            document.getElementById('uploadForm').style.display = 'none';
+            document.getElementById('newResourceForm').reset();
+        }
+
+        // Load resources
+        function loadResources() {
+            const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+            displayResources(resources);
+        }
+
+        function displayResources(resources) {
+            const resourcesGrid = document.getElementById('resourcesGrid');
+            if (!resourcesGrid) return;
+
+            resourcesGrid.innerHTML = '';
+
+            if (resources.length === 0) {
+                resourcesGrid.innerHTML = '<p style="text-align: center; color: #718096;">No resources found</p>';
+                return;
+            }
+
+            resources.forEach(resource => {
+                const resourceCard = document.createElement('div');
+                resourceCard.className = 'event-card';
+                
+                const fileIcon = getFileIcon(resource.fileType);
+                
+                resourceCard.innerHTML = `
+                    <div class="event-date">
+                        <i class="${fileIcon}" style="font-size: 2rem; color: white;"></i>
+                    </div>
+                    <div class="event-content">
+                        <h3>${resource.title}</h3>
+                        <p>${resource.description || 'No description available'}</p>
+                        <div class="event-meta">
+                            <span><i class="fas fa-tag"></i> ${resource.category}</span>
+                            <span><i class="fas fa-book"></i> ${resource.subject}</span>
+                            <span><i class="fas fa-download"></i> ${resource.downloads || 0} downloads</span>
+                        </div>
+                        <div class="event-actions">
+                            <button class="btn btn-primary" onclick="downloadResource('${resource.id}')">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="btn btn-secondary" onclick="viewResourceDetails('${resource.id}')">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                resourcesGrid.appendChild(resourceCard);
+            });
+        }
+
+        function getFileIcon(fileType) {
+            const iconMap = {
+                'pdf': 'fas fa-file-pdf',
+                'doc': 'fas fa-file-word',
+                'docx': 'fas fa-file-word',
+                'txt': 'fas fa-file-alt',
+                'ppt': 'fas fa-file-powerpoint',
+                'pptx': 'fas fa-file-powerpoint',
+                'jpg': 'fas fa-file-image',
+                'jpeg': 'fas fa-file-image',
+                'png': 'fas fa-file-image',
+                'mp4': 'fas fa-file-video',
+                'mp3': 'fas fa-file-audio'
+            };
+            return iconMap[fileType] || 'fas fa-file';
+        }
+
+        // Resource actions
+        function downloadResource(resourceId) {
+            const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+            const resource = resources.find(r => r.id == resourceId);
+            
+            if (resource) {
+                resource.downloads = (resource.downloads || 0) + 1;
+                localStorage.setItem('resources', JSON.stringify(resources));
+                loadResources();
+                showNotification('Resource downloaded successfully!', 'success');
+                
+                // Simulate download
+                const link = document.createElement('a');
+                link.href = resource.fileData || '#';
+                link.download = resource.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function viewResourceDetails(resourceId) {
+            const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+            const resource = resources.find(r => r.id == resourceId);
+            
+            if (resource) {
+                alert(`Resource Details:\n\nTitle: ${resource.title}\nCategory: ${resource.category}\nSubject: ${resource.subject}\nDescription: ${resource.description || 'No description'}\nTags: ${resource.tags || 'No tags'}\nDownloads: ${resource.downloads || 0}\nUploaded by: ${resource.uploadedBy}`);
+            }
+        }
+
+        // Search resources
+        function searchResources() {
+            const searchInput = document.getElementById('resourceSearchInput');
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                loadResources();
+                return;
+            }
+            
+            const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+            const filteredResources = resources.filter(resource => {
+                const searchText = `${resource.title} ${resource.subject} ${resource.description || ''} ${resource.tags || ''}`.toLowerCase();
+                return searchText.includes(query.toLowerCase());
+            });
+            
+            displayResources(filteredResources);
+        }
+
+        // Form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadResources();
+
+            // Handle form submission
+            document.getElementById('newResourceForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const fileInput = document.getElementById('resourceFile');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    showNotification('Please select a file to upload.', 'error');
+                    return;
+                }
+                
+                // Read file data
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const newResource = {
+                        id: Date.now().toString(),
+                        title: document.getElementById('resourceTitle').value,
+                        category: document.getElementById('resourceCategory').value,
+                        subject: document.getElementById('resourceSubject').value,
+                        description: document.getElementById('resourceDescription').value,
+                        tags: document.getElementById('resourceTags').value,
+                        fileName: file.name,
+                        fileType: file.name.split('.').pop().toLowerCase(),
+                        fileSize: file.size,
+                        fileData: e.target.result,
+                        downloads: 0,
+                        uploadedBy: JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}').email,
+                        uploadDate: new Date().toISOString()
+                    };
+
+                    // Save to localStorage
+                    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+                    resources.push(newResource);
+                    localStorage.setItem('resources', JSON.stringify(resources));
+
+                    // Save to Firebase if available
+                    if (window.firebaseDB) {
+                        window.firebaseDB.createResource(newResource).then(result => {
+                            if (result.success) {
+                                console.log('Resource saved to Firebase');
+                            } else {
+                                console.error('Failed to save resource:', result.error);
+                            }
+                        });
+                    }
+
+                    // Reset form and hide
+                    hideUploadForm();
+                    loadResources();
+                    showNotification('Resource uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    const resources = JSON.parse(localStorage.getItem('resources') || '[]');
+                    
+                    if (filter === 'all') {
+                        displayResources(resources);
+                    } else {
+                        const filteredResources = resources.filter(resource => resource.category === filter);
+                        displayResources(filteredResources);
+                    }
+                });
+            });
+        });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close">&times;</button>
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            const closeBtn = notification.querySelector('.notification-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    notification.remove();
+                });
+            }
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

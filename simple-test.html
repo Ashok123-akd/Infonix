@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Authentication Test</h1>
+        
+        <div id="status" class="status info">Loading...</div>
+        
+        <div>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button onclick="logout()">Logout</button>
+            <button onclick="checkAuth()">Check Auth</button>
+            <button onclick="goToDashboard()">Go to Dashboard</button>
+        </div>
+        
+        <div id="userInfo" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;"></div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script>
+        let currentUser = null;
+        
+        function updateStatus(message, type = 'info') {
+            document.getElementById('status').textContent = message;
+            document.getElementById('status').className = `status ${type}`;
+        }
+        
+        function updateUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            if (user) {
+                userInfo.innerHTML = `
+                    <h3>User Info:</h3>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Name:</strong> ${user.displayName || 'Not set'}</p>
+                    <p><strong>UID:</strong> ${user.uid}</p>
+                `;
+            } else {
+                userInfo.innerHTML = '<p>No user logged in</p>';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('Page loaded, checking Firebase...', 'info');
+            
+            if (typeof firebase === 'undefined') {
+                updateStatus('Firebase is not loaded!', 'error');
+                return;
+            }
+            
+            updateStatus('Firebase loaded successfully', 'success');
+            
+            // Set up auth listener
+            firebase.auth().onAuthStateChanged(function(user) {
+                currentUser = user;
+                console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+                
+                if (user) {
+                    updateStatus(`Logged in as: ${user.email}`, 'success');
+                    updateUserInfo(user);
+                } else {
+                    updateStatus('Not logged in', 'info');
+                    updateUserInfo(null);
+                }
+            });
+        });
+        
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                updateStatus('Please enter email and password', 'error');
+                return;
+            }
+            
+            updateStatus('Logging in...', 'info');
+            
+            try {
+                const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+                updateStatus(`Login successful: ${result.user.email}`, 'success');
+            } catch (error) {
+                updateStatus(`Login failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function logout() {
+            try {
+                await firebase.auth().signOut();
+                updateStatus('Logged out successfully', 'success');
+            } catch (error) {
+                updateStatus(`Logout failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkAuth() {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                updateStatus(`Current user: ${user.email}`, 'success');
+            } else {
+                updateStatus('No user currently signed in', 'info');
+            }
+        }
+        
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

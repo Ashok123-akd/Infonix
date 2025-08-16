@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Studymate</title>
+    <!-- Firebase SDK - Updated to latest version -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        /* Authentication Error */
+        .auth-error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .auth-error h2 {
+            color: #e53e3e;
+            margin-bottom: 1rem;
+        }
+        
+        .auth-error p {
+            color: #4a5568;
+            margin-bottom: 1.5rem;
+        }
+        
+        .auth-error .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-error .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Dashboard...</div>
+    </div>
+    
+    <!-- Authentication Error -->
+    <div id="authError" class="auth-error">
+        <h2><i class="fas fa-exclamation-triangle"></i> Authentication Required</h2>
+        <p>You need to be logged in to access the dashboard.</p>
+        <a href="login.html" class="btn">Go to Login</a>
+    </div>
+
+    <!-- Skip to Content Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div id="top"></div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.jpg" alt="Studymate Logo" class="logo" onclick="window.location.href='dashboard.html'">
+                <span class="brand-name">Studymate</span>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="#top" class="nav-link active" onclick="showSection('home')">Home</a>
+                <a href="events.html" class="nav-link" onclick="navigateToPage('events.html')">Events</a>
+                <a href="resources.html" class="nav-link" onclick="navigateToPage('resources.html')">Resources</a>
+                <a href="groups.html" class="nav-link" onclick="navigateToPage('groups.html')">Groups</a>
+            </div>
+            
+            <div class="nav-user">
+                <div class="user-menu">
+                    <img src="https://via.placeholder.com/40" alt="User Avatar" class="user-avatar" id="userAvatar">
+                    <span class="user-name" id="userName">User</span>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown">
+                        <a href="#" id="editProfile"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                        <a href="#" id="openSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="login.html" id="logout" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Network Status Indicator -->
+    <div class="network-status" id="networkStatus">
+        <i class="fas fa-wifi"></i>
+        <span id="networkStatusText">Checking connection...</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>Quick Actions</h3>
+                <div class="quick-actions">
+                    <ul>
+                        <li><a href="resources.html#upload" onclick="navigateToSection('resources.html', 'upload')"><i class="fas fa-upload"></i> Upload Resource</a></li>
+                        <li><a href="events.html#create" onclick="navigateToSection('events.html', 'create')"><i class="fas fa-calendar-plus"></i> Create Event</a></li>
+                        <li><a href="groups.html#create" onclick="navigateToSection('groups.html', 'create')"><i class="fas fa-users"></i> Create Group</a></li>
+                        <li><a href="resources.html#search" onclick="navigateToSection('resources.html', 'search')"><i class="fas fa-search"></i> Search Resources</a></li>
+                        <li><a href="#friends" onclick="showSection('friends')"><i class="fas fa-user-friends"></i> Friends</a></li>
+                        <li><a href="contact.html" onclick="navigateToPage('contact.html')"><i class="fas fa-envelope"></i> Contact Support</a></li>
+                        <li><a href="about.html" onclick="navigateToPage('about.html')"><i class="fas fa-info-circle"></i> About</a></li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-content" id="main-content">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h1>Welcome back, <span id="userName">User</span>!</h1>
+                <p>Here's what's happening with your studies today</p>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <h2><i class="fas fa-search"></i> Find Users</h2>
+                <div class="search-container">
+                    <input type="text" id="userSearchInput" placeholder="Search by name, email, or field of study..." class="search-input">
+                    <button onclick="searchUsers()" class="search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3 id="totalUsers">0</h3>
+                        <p>Active Users</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3 id="totalEvents">0</h3>
+                        <p>Upcoming Events</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h3 id="totalResources">0</h3>
+                        <p>Study Resources</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-comments"></i>
+                        <h3 id="totalMessages">0</h3>
+                        <p>Messages Sent</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Section -->
+            <div class="events-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2><i class="fas fa-calendar"></i> Upcoming Events</h2>
+                    <div class="calendar-dropdown">
+                        <button class="calendar-toggle">
+                            <i class="fas fa-calendar-alt"></i>
+                            View Calendar
+                        </button>
+                        <div class="calendar-panel">
+                            <div class="calendar-header">
+                                <h3 id="calendarMonth">January 2025</h3>
+                                <div class="calendar-nav">
+                                    <button onclick="previousMonth()"><i class="fas fa-chevron-left"></i></button>
+                                    <button onclick="nextMonth()"><i class="fas fa-chevron-right"></i></button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid">
+                                <!-- Calendar will be dynamically generated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="events-grid" id="eventsGrid">
+                    <!-- Events will be dynamically loaded -->
+                </div>
+            </div>
+
+            <!-- Friends Section -->
+            <div class="friends-section">
+                <h2><i class="fas fa-user-friends"></i> Friends & Connections</h2>
+                <div class="friends-tabs">
+                    <button class="tab-button active" onclick="showFriendsTab('friends')">My Friends</button>
+                    <button class="tab-button" onclick="showFriendsTab('requests')">Friend Requests</button>
+                    <button class="tab-button" onclick="showFriendsTab('suggestions')">Suggestions</button>
+                </div>
+                
+                <!-- Friends Tab -->
+                <div id="friendsTab" class="tab-content active">
+                    <div class="friends-grid" id="friendsGrid">
+                        <!-- Friends will be dynamically loaded -->
+                    </div>
+                </div>
+                
+                <!-- Requests Tab -->
+                <div id="requestsTab" class="tab-content">
+                    <div class="requests-list" id="requestsList">
+                        <!-- Friend requests will be dynamically loaded -->
+                    </div>
+                </div>
+                
+                <!-- Suggestions Tab -->
+                <div id="suggestionsTab" class="tab-content">
+                    <div class="suggestions-list" id="suggestionsList">
+                        <!-- Friend suggestions will be dynamically loaded -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post composer + feed -->
+            <div class="feed-container">
+                <div class="post-composer">
+                    <form id="postForm" class="post-form">
+                        <div class="post-input-container">
+                            <img src="https://via.placeholder.com/40" alt="User Avatar" class="post-avatar" id="postUserAvatar">
+                            <textarea id="postText" placeholder="What's on your mind? Share your thoughts, study tips, or ask questions..." class="post-textarea"></textarea>
+                        </div>
+                        <div class="post-actions">
+                            <div class="post-attachments">
+                                <button type="button" class="post-attachment-btn" onclick="document.getElementById('postImageInput').click()">
+                                    <i class="fas fa-image"></i> Photo
+                                </button>
+                                <button type="button" class="post-attachment-btn" onclick="document.getElementById('postFileInput').click()">
+                                    <i class="fas fa-file"></i> File
+                                </button>
+                                <button type="button" class="post-attachment-btn" onclick="addEmoji()">
+                                    <i class="fas fa-smile"></i> Emoji
+                                </button>
+                            </div>
+                            <button type="submit" class="btn btn-primary post-submit-btn">
+                                <i class="fas fa-paper-plane"></i> Post
+                            </button>
+                        </div>
+                        <input type="file" id="postImageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                        <input type="file" id="postFileInput" accept=".pdf,.doc,.docx,.txt" style="display: none;" onchange="handleFileUpload(event)">
+                    </form>
+                </div>
+
+                <div class="feed-filters">
+                    <button class="filter-btn active" data-filter="all">All Posts</button>
+                    <button class="filter-btn" data-filter="study">Study Tips</button>
+                    <button class="filter-btn" data-filter="questions">Questions</button>
+                    <button class="filter-btn" data-filter="resources">Resources</button>
+                </div>
+
+                <div id="feed" class="feed">
+                    <!-- Posts will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Profile Modal -->
+    <div id="userProfileModal" class="user-profile-modal">
+        <div class="user-profile-content">
+            <div class="user-profile-header">
+                <img id="profileUserAvatar" src="https://via.placeholder.com/120" alt="User Avatar" class="user-profile-avatar">
+                <div class="user-profile-info">
+                    <h2 id="profileUserName">User Name</h2>
+                    <p id="profileUserEmail">user@example.com</p>
+                    <p id="profileUserField">Field of Study</p>
+                    <span class="user-profile-status" id="profileUserStatus">Online</span>
+                </div>
+            </div>
+            
+            <div class="user-profile-actions">
+                <button class="user-profile-action-btn call" onclick="startCall('audio')">
+                    <i class="fas fa-phone"></i>
+                    Call
+                </button>
+                <button class="user-profile-action-btn video" onclick="startCall('video')">
+                    <i class="fas fa-video"></i>
+                    Video Call
+                </button>
+                <button class="user-profile-action-btn message" onclick="openMessageInterface()">
+                    <i class="fas fa-comment"></i>
+                    Message
+                </button>
+            </div>
+            
+            <div class="user-profile-details">
+                <div class="user-profile-detail">
+                    <h3><i class="fas fa-university"></i> University</h3>
+                    <p id="profileUserUniversity">University Name</p>
+                </div>
+                <div class="user-profile-detail">
+                    <h3><i class="fas fa-graduation-cap"></i> Field</h3>
+                    <p id="profileUserFieldDetail">Field of Study</p>
+                </div>
+                <div class="user-profile-detail">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+                    <p id="profileUserLocation">City, Country</p>
+                </div>
+                <div class="user-profile-detail">
+                    <h3><i class="fas fa-info-circle"></i> Bio</h3>
+                    <p id="profileUserBio">User bio information</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeUserProfileModal()">Close</button>
+                <button type="button" class="btn btn-primary" onclick="sendFriendRequest()">Send Friend Request</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Interface -->
+    <div id="callInterface" class="call-interface">
+        <div class="call-header">
+            <h3 id="callUserName">Calling User</h3>
+            <p id="callStatus">Connecting...</p>
+        </div>
+        
+        <div class="call-video-container">
+            <video id="localVideo" autoplay playsinline muted class="call-video"></video>
+            <video id="remoteVideo" autoplay playsinline class="call-video" style="display: none;"></video>
+        </div>
+        
+        <div class="call-controls">
+            <button class="call-control-btn mute" id="muteBtn" onclick="toggleMute()">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="call-control-btn video" id="videoBtn" onclick="toggleVideo()">
+                <i class="fas fa-video"></i>
+            </button>
+            <button class="call-control-btn end" onclick="endCall()">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Message Interface -->
+    <div id="messageInterface" class="message-interface">
+        <div class="message-header">
+            <h3 id="messageUserName">User Name</h3>
+            <button class="message-close" onclick="closeMessageInterface()">&times;</button>
+        </div>
+        
+        <div class="message-body" id="messageBody">
+            <!-- Messages will be dynamically loaded -->
+        </div>
+        
+        <div class="message-input">
+            <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleMessageKeyPress(event)">
+            <button class="message-send" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-edit"></i> Edit Profile</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="profile-avatar-section">
+                        <div class="avatar-container">
+                            <img id="profileAvatar" src="https://via.placeholder.com/120" alt="Profile Avatar" class="profile-avatar">
+                            <div class="avatar-overlay">
+                                <label for="avatarInput" class="avatar-upload-btn">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                            </div>
+                        </div>
+                        <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileFirstName">First Name *</label>
+                            <input type="text" id="profileFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileLastName">Last Name *</label>
+                            <input type="text" id="profileLastName" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileEmail">Email</label>
+                        <input type="email" id="profileEmail" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profilePhone">Phone Number</label>
+                        <input type="tel" id="profilePhone" placeholder="+1 (555) 123-4567">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileDateOfBirth">Date of Birth</label>
+                            <input type="date" id="profileDateOfBirth">
+                        </div>
+                        <div class="form-group">
+                            <label for="profileGender">Gender</label>
+                            <select id="profileGender">
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                                <option value="prefer-not-to-say">Prefer not to say</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileUniversity">University/Institution</label>
+                        <input type="text" id="profileUniversity" placeholder="e.g., Harvard University">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="profileField">Field of Study</label>
+                            <select id="profileField">
+                                <option value="">Select your field</option>
+                                <option value="computer-science">Computer Science</option>
+                                <option value="engineering">Engineering</option>
+                                <option value="business">Business</option>
+                                <option value="medicine">Medicine</option>
+                                <option value="law">Law</option>
+                                <option value="arts">Arts & Humanities</option>
+                                <option value="sciences">Natural Sciences</option>
+                                <option value="social-sciences">Social Sciences</option>
+                                <option value="mathematics">Mathematics</option>
+                                <option value="physics">Physics</option>
+                                <option value="chemistry">Chemistry</option>
+                                <option value="biology">Biology</option>
+                                <option value="psychology">Psychology</option>
+                                <option value="economics">Economics</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="profileYear">Year of Study</label>
+                            <select id="profileYear">
+                                <option value="">Select year</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                                <option value="5">5th Year</option>
+                                <option value="graduate">Graduate Student</option>
+                                <option value="phd">PhD Student</option>
+                                <option value="alumni">Alumni</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileLocation">Location</label>
+                        <input type="text" id="profileLocation" placeholder="City, Country">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileBio">Bio</label>
+                        <textarea id="profileBio" rows="4" placeholder="Tell us about yourself, your interests, and what you're studying..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileInterests">Interests & Hobbies</label>
+                        <textarea id="profileInterests" rows="3" placeholder="What are your interests outside of academics?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileSkills">Skills & Expertise</label>
+                        <textarea id="profileSkills" rows="3" placeholder="What skills or expertise would you like to share with others?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileGoals">Academic Goals</label>
+                        <textarea id="profileGoals" rows="3" placeholder="What are your academic goals and aspirations?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" form="profileForm">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="tab-navigation">
+                    <button class="tab-button active" onclick="showTab('account')">Account</button>
+                    <button class="tab-button" onclick="showTab('privacy')">Privacy</button>
+                    <button class="tab-button" onclick="showTab('notifications')">Notifications</button>
+                    <button class="tab-button" onclick="showTab('accessibility')">Accessibility</button>
+                </div>
+
+                <!-- Account Tab -->
+                <div id="accountTab" class="tab-content active">
+                    <h3>Account Settings</h3>
+                    <div class="form-group">
+                        <label for="settingsEmail">Email</label>
+                        <input type="email" id="settingsEmail" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsPassword">New Password</label>
+                        <input type="password" id="settingsPassword" placeholder="Leave blank to keep current password">
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsConfirmPassword">Confirm New Password</label>
+                        <input type="password" id="settingsConfirmPassword" placeholder="Confirm new password">
+                    </div>
+                </div>
+
+                <!-- Privacy Tab -->
+                <div id="privacyTab" class="tab-content">
+                    <h3>Privacy Settings</h3>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="profileVisibility" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Make profile visible to other users</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="activityVisibility" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Show activity in recent activity feed</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="searchVisibility" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Allow others to find me in search</span>
+                    </div>
+                </div>
+
+                <!-- Notifications Tab -->
+                <div id="notificationsTab" class="tab-content">
+                    <h3>Notification Settings</h3>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="emailNotifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Email notifications</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="eventReminders" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Event reminders</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="messageNotifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Message notifications</span>
+                    </div>
+                </div>
+
+                <!-- Accessibility Tab -->
+                <div id="accessibilityTab" class="tab-content">
+                    <h3>Accessibility Settings</h3>
+                    <div class="form-group">
+                        <label>Font Size</label>
+                        <div class="font-size-control">
+                            <button type="button" onclick="decreaseFontSize()">A-</button>
+                            <span id="fontSizeDisplay">Medium</span>
+                            <button type="button" onclick="increaseFontSize()">A+</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Color Theme</label>
+                        <div class="color-palette">
+                            <div class="color-option active" style="background: #667eea;" onclick="setColorTheme('default')"></div>
+                            <div class="color-option" style="background: #10b981;" onclick="setColorTheme('green')"></div>
+                            <div class="color-option" style="background: #f59e0b;" onclick="setColorTheme('orange')"></div>
+                            <div class="color-option" style="background: #ef4444;" onclick="setColorTheme('red')"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="highContrast">
+                            <span class="slider"></span>
+                        </label>
+                        <span>High contrast mode</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeSettingsModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

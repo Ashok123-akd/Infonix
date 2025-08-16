@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studymate - Your Educational Platform</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="/logo.jpg" alt="Studymate Logo" class="logo">
+                <span class="brand-name">Studymate</span>
+            </div>
+            
+            <div class="nav-menu" id="nav-menu">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="/events.html" class="nav-link">Events</a>
+                <a href="/resources.html" class="nav-link">Resources</a>
+                <a href="/about.html" class="nav-link">About Us</a>
+                <a href="/contact.html" class="nav-link">Contact Us</a>
+            </div>
+            
+            <div class="nav-auth">
+                <a href="/login.html" class="auth-btn login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </a>
+                <a href="/signup.html" class="auth-btn signup-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </a>
+            </div>
+            
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Welcome to Studymate</h1>
+            <p>Your one-stop solution for collaborative learning, resource sharing, and educational excellence</p>
+            <div class="hero-buttons">
+                <a href="/signup.html" class="btn btn-primary">Get Started</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="/logo.jpg" alt="Education Illustration">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose Studymate?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Collaborative Learning</h3>
+                    <p>Study together with peers worldwide, share knowledge, and learn from each other's experiences.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <h3>Resource Sharing</h3>
+                    <p>Access thousands of study materials, documents, and multimedia resources shared by the community.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Event Management</h3>
+                    <p>Organize and join study sessions, workshops, and educational events with integrated calendar.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <h3>Profile Customization</h3>
+                    <p>Create your personalized learning profile and track your educational journey.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CollabHub Section -->
+    <section id="collabhub" class="collabhub">
+        <div class="container">
+            <h2 class="section-title">CollabHub - Study Together</h2>
+            <div class="collabhub-content">
+                <div class="collabhub-info">
+                    <h3>Connect with Study Partners</h3>
+                    <ul>
+                        <li>Find study groups based on your subjects</li>
+                        <li>Real-time messaging and video calls</li>
+                        <li>Share notes and collaborate on projects</li>
+                        <li>Track group progress and achievements</li>
+                    </ul>
+                </div>
+                <div class="collabhub-preview">
+                    <div class="preview-card">
+                        <h4>Active Study Groups</h4>
+                        <div class="group-stats">
+                            <span>Computer Science: 15 groups</span>
+                            <span>Engineering: 12 groups</span>
+                            <span>Business: 8 groups</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section id="events" class="events">
+        <div class="container">
+            <h2 class="section-title">Upcoming Events</h2>
+            <div class="events-grid">
+                <div class="event-card">
+                    <div class="event-date">
+                        <span class="day">15</span>
+                        <span class="month">Dec</span>
+                    </div>
+                    <div class="event-content">
+                        <h3>Study Group Meetup</h3>
+                        <p>Join our monthly study group meetup for Computer Science students.</p>
+                        <div class="event-meta">
+                            <span><i class="fas fa-clock"></i> 2:00 PM</span>
+                            <span><i class="fas fa-map-marker-alt"></i> Virtual</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="event-card">
+                    <div class="event-date">
+                        <span class="day">20</span>
+                        <span class="month">Dec</span>
+                    </div>
+                    <div class="event-content">
+                        <h3>Workshop: Study Techniques</h3>
+                        <p>Learn effective study techniques from educational experts.</p>
+                        <div class="event-meta">
+                            <span><i class="fas fa-clock"></i> 4:00 PM</span>
+                            <span><i class="fas fa-map-marker-alt"></i> Virtual</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources Section -->
+    <section id="resources" class="resources">
+        <div class="container">
+            <h2 class="section-title">Learning Resources</h2>
+            <div class="resources-grid">
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3>Study Materials</h3>
+                    <p>Access comprehensive study guides, notes, and reference materials.</p>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <h3>Video Tutorials</h3>
+                    <p>Watch expert-led video tutorials on various subjects and topics.</p>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>E-Books</h3>
+                    <p>Download digital textbooks and reference books for your studies.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">What Our Users Say</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"Studymate has transformed my learning experience. The collaborative features are outstanding!"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://via.placeholder.com/50" alt="Ashok" class="author-avatar">
+                        <div class="author-info">
+                            <h4>Ashok</h4>
+                            <span>Computer Science Student</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"The resource sharing feature helped me access materials I couldn't find anywhere else."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://via.placeholder.com/50" alt="Sophiya" class="author-avatar">
+                        <div class="author-info">
+                            <h4>Sophiya</h4>
+                            <span>Engineering Student</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"Great platform for connecting with study partners and organizing study sessions."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="https://via.placeholder.com/50" alt="Sudarshan" class="author-avatar">
+                        <div class="author-info">
+                            <h4>Sudarshan</h4>
+                            <span>Business Student</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Studymate</h3>
+                    <p>Empowering students through collaborative learning and resource sharing.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#collabhub">CollabHub</a></li>
+                        <li><a href="#events">Events</a></li>
+                        <li><a href="#resources">Resources</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>Email: <a href="mailto:ak6721818@gmail.com">ak6721818@gmail.com</a></p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Studymate. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/script.js"></script>
+</body>
+</html>

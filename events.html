@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Studymate</title>
+    <!-- Firebase SDK - Updated to latest version -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="top"></div>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="logo.jpg" alt="Studymate Logo" class="logo" onclick="window.location.href='dashboard.html'">
+                <span class="brand-name">Studymate</span>
+            </div>
+            
+            <div class="nav-menu" id="navMenu">
+                <a href="dashboard.html" class="nav-link">Home</a>
+                <a href="events.html" class="nav-link active">Events</a>
+                <a href="resources.html" class="nav-link">Resources</a>
+                <a href="groups.html" class="nav-link">Groups</a>
+            </div>
+            
+            <div class="nav-user">
+                <div class="user-menu">
+                    <img src="https://via.placeholder.com/40" alt="User Avatar" class="user-avatar">
+                    <span class="user-name">User</span>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown">
+                        <a href="#" id="editProfile"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                        <a href="#" id="openSettings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="login.html" id="logout" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger" id="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Events Header -->
+            <div class="dashboard-header">
+                <h1>Events</h1>
+                <p>Discover and join study events, workshops, and academic activities</p>
+            </div>
+
+            <!-- Create Event Section -->
+            <div id="create" class="events-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2><i class="fas fa-calendar-plus"></i> Create New Event</h2>
+                    <button class="btn btn-primary" onclick="showCreateEventForm()">
+                        <i class="fas fa-plus"></i> Create Event
+                    </button>
+                </div>
+                
+                <!-- Create Event Form (Hidden by default) -->
+                <div id="createEventForm" class="event-form" style="display: none;">
+                    <form id="newEventForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="eventTitle">Event Title *</label>
+                                <input type="text" id="eventTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="eventDate">Date *</label>
+                                <input type="date" id="eventDate" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="eventTime">Time *</label>
+                                <input type="time" id="eventTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="eventLocation">Location</label>
+                                <input type="text" id="eventLocation" placeholder="e.g., Library Room 201">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="eventDescription">Description *</label>
+                            <textarea id="eventDescription" rows="4" required placeholder="Describe your event..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="eventCategory">Category</label>
+                            <select id="eventCategory">
+                                <option value="study-group">Study Group</option>
+                                <option value="workshop">Workshop</option>
+                                <option value="exam-prep">Exam Preparation</option>
+                                <option value="lecture">Lecture</option>
+                                <option value="social">Social Event</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="hideCreateEventForm()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Event</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Events List -->
+            <div class="events-section">
+                <h2><i class="fas fa-calendar"></i> All Events</h2>
+                <div class="events-filters">
+                    <button class="filter-btn active" data-filter="all">All Events</button>
+                    <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                    <button class="filter-btn" data-filter="today">Today</button>
+                    <button class="filter-btn" data-filter="week">This Week</button>
+                </div>
+                
+                <div class="events-grid" id="allEventsGrid">
+                    <!-- Events will be dynamically loaded -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const storedUser = JSON.parse(localStorage.getItem('studymate_user') || sessionStorage.getItem('studymate_user') || 'null');
+            if (!storedUser) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (window.firebaseAuth) {
+                window.firebaseAuth.signOut().then(() => {
+                    localStorage.removeItem('studymate_user');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                });
+            } else {
+                localStorage.removeItem('studymate_user');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Event form functions
+        function showCreateEventForm() {
+            document.getElementById('createEventForm').style.display = 'block';
+            document.getElementById('eventDate').min = new Date().toISOString().split('T')[0];
+        }
+
+        function hideCreateEventForm() {
+            document.getElementById('createEventForm').style.display = 'none';
+            document.getElementById('newEventForm').reset();
+        }
+
+        // Load events
+        function loadAllEvents() {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            displayAllEvents(events);
+        }
+
+        function displayAllEvents(events) {
+            const eventsGrid = document.getElementById('allEventsGrid');
+            if (!eventsGrid) return;
+
+            eventsGrid.innerHTML = '';
+
+            if (events.length === 0) {
+                eventsGrid.innerHTML = '<p style="text-align: center; color: #718096;">No events found</p>';
+                return;
+            }
+
+            events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'event-card';
+                
+                const eventDate = new Date(event.date);
+                const day = eventDate.getDate();
+                const month = eventDate.toLocaleDateString('en-US', { month: 'short' });
+                
+                eventCard.innerHTML = `
+                    <div class="event-date">
+                        <span class="day">${day}</span>
+                        <span class="month">${month}</span>
+                    </div>
+                    <div class="event-content">
+                        <h3>${event.title}</h3>
+                        <p>${event.description}</p>
+                        <div class="event-meta">
+                            <span><i class="fas fa-clock"></i> ${event.time}</span>
+                            <span><i class="fas fa-map-marker-alt"></i> ${event.location || 'TBD'}</span>
+                            <span><i class="fas fa-users"></i> ${event.attendees || 0} attending</span>
+                        </div>
+                        <div class="event-actions">
+                            <button class="btn btn-primary" onclick="joinEvent('${event.id}')">
+                                <i class="fas fa-user-plus"></i> Join Event
+                            </button>
+                            <button class="btn btn-secondary" onclick="viewEventDetails('${event.id}')">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                eventsGrid.appendChild(eventCard);
+            });
+        }
+
+        // Event actions
+        function joinEvent(eventId) {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const event = events.find(e => e.id == eventId);
+            
+            if (event) {
+                event.attendees = (event.attendees || 0) + 1;
+                localStorage.setItem('events', JSON.stringify(events));
+                loadAllEvents();
+                showNotification('Successfully joined the event!', 'success');
+            }
+        }
+
+        function viewEventDetails(eventId) {
+            const events = JSON.parse(localStorage.getItem('events') || '[]');
+            const event = events.find(e => e.id == eventId);
+            
+            if (event) {
+                alert(`Event Details:\n\nTitle: ${event.title}\nDate: ${event.date}\nTime: ${event.time}\nLocation: ${event.location || 'TBD'}\nDescription: ${event.description}\nAttendees: ${event.attendees || 0}`);
+            }
+        }
+
+        // Form submission
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadAllEvents();
+
+            // Handle form submission
+            document.getElementById('newEventForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newEvent = {
+                    id: Date.now().toString(),
+                    title: document.getElementById('eventTitle').value,
+                    date: document.getElementById('eventDate').value,
+                    time: document.getElementById('eventTime').value,
+                    location: document.getElementById('eventLocation').value,
+                    description: document.getElementById('eventDescription').value,
+                    category: document.getElementById('eventCategory').value,
+                    attendees: 0,
+                    createdBy: JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('studymate_user') || '{}').email
+                };
+
+                // Save to localStorage
+                const events = JSON.parse(localStorage.getItem('events') || '[]');
+                events.push(newEvent);
+                localStorage.setItem('events', JSON.stringify(events));
+
+                // Save to Firebase if available
+                if (window.firebaseDB) {
+                    window.firebaseDB.createEvent(newEvent).then(result => {
+                        if (result.success) {
+                            console.log('Event saved to Firebase');
+                        } else {
+                            console.error('Failed to save event:', result.error);
+                        }
+                    });
+                }
+
+                // Reset form and hide
+                hideCreateEventForm();
+                loadAllEvents();
+                showNotification('Event created successfully!', 'success');
+            });
+        });
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close">&times;</button>
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            const closeBtn = notification.querySelector('.notification-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    notification.remove();
+                });
+            }
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
